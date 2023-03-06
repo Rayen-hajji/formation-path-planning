@@ -18,30 +18,42 @@ void FormationLayer::onInitialize()
     dsrv_ = new dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>(nh_);
     dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>::CallbackType cb = boost::bind(&FormationLayer::reconfigureCB, this, _1, _2);
     dsrv_->setCallback(cb);
-    this->robot_pose_subs_1_ = this->nh_.subscribe("/robot0/amcl_pose", 10, &FormationLayer::robotPoseCallback_1, this);
-    this->robot_pose_subs_2_ = this->nh_.subscribe("/robot1/amcl_pose", 10, &FormationLayer::robotPoseCallback_2, this);
-    this->robot_pose_subs_3_ = this->nh_.subscribe("/robot2/amcl_pose", 10, &FormationLayer::robotPoseCallback_3, this);
+    this->robot_fp_subs_1_ = this->nh_.subscribe("/robot0/move_base_flex/local_costmap/footprint", 10, &FormationLayer::robotFPCallback_1, this);
+    // this->robot_fp_subs_1_ = this->nh_.subscribe("/robot1/move_base_flex/local_costmap/footprint", 10, &FormationLayer::robotFPCallback_2, this);
+    // this->robot_fp_subs_1_ = this->nh_.subscribe("/robot2/move_base_flex/local_costmap/footprint", 10, &FormationLayer::robotFPCallback_3, this);
 }
 
 void FormationLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level){
     enabled_ = config.enabled;
 }
 
-void FormationLayer::robotPoseCallback_1(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg){
-    pose_0.pose.pose.position.x = msg->pose.pose.position.x;
-    pose_0.pose.pose.position.y = msg->pose.pose.position.y;
-
+void FormationLayer::robotFPCallback_1(const geometry_msgs::PolygonStamped &msg){
+    for(const auto& point : msg.polygon.points){
+        geometry_msgs::Point32 p;
+        p.x = point.x;
+        p.y = point.y;
+        p.z = 0;
+        fp_0.polygon.points.push_back(p);
+        ROS_INFO("Callback 1 done"); 
+    }
 }
-void FormationLayer::robotPoseCallback_2(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg){
-    pose_1.pose.pose.position.x = msg->pose.pose.position.x;
-    pose_1.pose.pose.position.y = msg->pose.pose.position.y;
 
-}
-void FormationLayer::robotPoseCallback_3(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg){
-    pose_2.pose.pose.position.x = msg->pose.pose.position.x;
-    pose_2.pose.pose.position.y = msg->pose.pose.position.y;
-
-}
+// void FormationLayer::robotPoseCallback_1(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg){
+//     pose_0.pose.pose.position.x = msg->pose.pose.position.x;
+//     pose_0.pose.pose.position.y = msg->pose.pose.position.y;
+//     // poses[0].pose.pose.position.x = msg->pose.pose.position.x;
+//     // poses[0].pose.pose.position.y = msg->pose.pose.position.y;
+// }
+// void FormationLayer::robotPoseCallback_2(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg){
+//     pose_1.pose.pose.position.x = msg->pose.pose.position.x;
+//     pose_1.pose.pose.position.y = msg->pose.pose.position.y;
+//     // poses[1].pose.pose.position.x = msg->pose.pose.position.x;
+//     // poses[1].pose.pose.position.y = msg->pose.pose.position.y;
+// }
+// void FormationLayer::robotPoseCallback_3(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg){
+//     pose_2.pose.pose.position.x = msg->pose.pose.position.x;
+//     pose_2.pose.pose.position.y = msg->pose.pose.position.y;
+// }
 
 // void AreaLayer::linetrace(int x0, int y0, int x1, int y1, std::vector<PointInt> &cells)
 // {
@@ -85,17 +97,18 @@ void FormationLayer::updateBounds(double robot_x, double robot_y, double robot_y
     if(!enabled_)
         return;
 
-    mark_x_ = pose_0.pose.pose.position.x;
-    mark_y_ = pose_0.pose.pose.position.y;
+    mark_x_ = robot_x;
+    mark_y_ = robot_y;
     
     *min_x = std::min(*min_x, mark_x_);
     *min_y = std::min(*min_y, mark_y_);
     *max_x = std::max(*max_x, mark_x_);
     *max_y = std::max(*max_y, mark_y_);
-    ROS_INFO("ROBOT_0, x=%f, y=%f",mark_x_,mark_y_);
-    ROS_INFO("ROBOT_1, x=%f, y=%f",pose_1.pose.pose.position.x,pose_1.pose.pose.position.y);
-    ROS_INFO("ROBOT_2, x=%f, y=%f",pose_2.pose.pose.position.x,pose_2.pose.pose.position.y);
-
+    int n = 0;
+    for(const auto& point : fp_0.polygon.points){
+        ROS_INFO("point%d: %f, %f", n, point.x, point.y);
+        n++;
+    }
 }
 
 void FormationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)

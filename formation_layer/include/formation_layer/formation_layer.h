@@ -13,6 +13,11 @@ using namespace std;
 
 namespace formation_layer_namespace
 {
+
+struct Point{
+    double x;
+    double y;
+};
 class FormationLayer : public costmap_2d::Layer
 {
 public :
@@ -27,22 +32,39 @@ private :
     dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;
     
     //Subscribers to the robot positions
-    ros::Subscriber robot_pose_subs_1_;
-    ros::Subscriber robot_pose_subs_2_;
-    ros::Subscriber robot_pose_subs_3_;
+    // ros::Subscriber robot_pose_subs_1_;
+    // ros::Subscriber robot_pose_subs_2_;
+    // ros::Subscriber robot_pose_subs_3_;
+
+    //Subscribers to the robots footprints
+    ros::Subscriber robot_fp_subs_1_;
+    ros::Subscriber robot_fp_subs_2_;
+    ros::Subscriber robot_fp_subs_3_;
 
     //Array to save the robots positions 
     // std::vector<geometry_msgs::PoseWithCovarianceStamped> poses[3];
-    geometry_msgs::PoseWithCovarianceStamped pose_0; 
-    geometry_msgs::PoseWithCovarianceStamped pose_1;
-    geometry_msgs::PoseWithCovarianceStamped pose_2;  
-    
+    // geometry_msgs::PoseWithCovarianceStamped pose_0; 
+    // geometry_msgs::PoseWithCovarianceStamped pose_1;
+    // geometry_msgs::PoseWithCovarianceStamped pose_2; 
+    // std::vector <Point> poses;
+
+    //polygons to save the robots footprints   
+    geometry_msgs::PolygonStamped fp_0;
+    geometry_msgs::PolygonStamped fp_1;
+    geometry_msgs::PolygonStamped fp_2; 
+
     void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
     
-    //callback function of the robot position
-    void robotPoseCallback_1(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg);
-    void robotPoseCallback_2(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg);
-    void robotPoseCallback_3(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg);
+    //callback functions of the robots positions
+    // void robotPoseCallback_1(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg);
+    // void robotPoseCallback_2(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg);
+    // void robotPoseCallback_3(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg);
+
+    //callback functions of the robot footprints
+    void robotFPCallback_1(const geometry_msgs::PolygonStamped &msg);
+    // void robotFPCallback_2(const geometry_msgs::PolygonStamped &msg);
+    // void robotFPCallback_3(const geometry_msgs::PolygonStamped &msg);
+
     
     // /// \brief             rasterizes line between two map coordinates into a set of cells
     // /// \note              since Costmap2D::raytraceLine() is based on the size_x and since we want to rasterize polygons that might also be located outside map bounds we provide a modified raytrace
