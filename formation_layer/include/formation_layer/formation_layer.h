@@ -1,5 +1,6 @@
 #ifndef FORMATION_LAYER_H_
 #define FORMATION_LAYER_H_
+#include <formation_layer/FormationLayerConfig.h>
 #include <ros/ros.h>
 #include <costmap_2d/layer.h>
 #include <costmap_2d/layered_costmap.h>
@@ -22,21 +23,27 @@ class FormationLayer : public costmap_2d::Layer
 public :
     using Polygon = std::vector<geometry_msgs::Point>;
     FormationLayer();
+    virtual ~FormationLayer();
 
     virtual void onInitialize();
     virtual void updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x, double* min_y, double* max_x,double* max_y);
     virtual void updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
 
+    // virtual void activate();
+    // virtual void deactivate();
+    // virtual void reset();
+
+protected : 
+    virtual void setupDynamicReconfigure(ros::NodeHandle& nh_);
+
+    bool rolling_window_;
 
 private :
     ros::NodeHandle nh_;
-    dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;
+    dynamic_reconfigure::Server<formation_layer::FormationLayerConfig> *dsrv_;
 
-    //Subscribers to the robots footprints
-    // ros::Subscriber robot_pose_sub_0_;
-    // ros::Subscriber robot_fp_subs_0_;
-    // ros::Subscriber robot_fp_subs_1_;
-    // ros::Subscriber robot_fp_subs_2_;
+
+
     ros::Subscriber formationFPSubs_;
 
     double mark_x_, mark_y_;
@@ -45,7 +52,7 @@ private :
     Polygon formation_fp;
     
 
-    void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
+    void reconfigureCB(formation_layer::FormationLayerConfig &config, uint32_t level);
 
     //callback function of the formation footprint
     void formationFPCallback(const geometry_msgs::PolygonStamped &msg);

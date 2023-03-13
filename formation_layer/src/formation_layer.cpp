@@ -13,19 +13,31 @@ namespace formation_layer_namespace
     {
         ROS_INFO("FormationLayer::onInitialize");
         this->nh_ = ros::NodeHandle("~/"+ name_);
+        rolling_window_ = layered_costmap_->isRolling(); 
         current_ = true;
         //Plugin initialization
-        dsrv_ = new dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>(this->nh_);
-        dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>::CallbackType cb = boost::bind(&FormationLayer::reconfigureCB, this, _1, _2);
-        dsrv_->setCallback(cb);
-        
-
+        dsrv_ = NULL;
+        setupDynamicReconfigure(nh_);
         formationFPSubs_ = this->nh_.subscribe("/robot0/move_base_flex/formation_footprint",10, &FormationLayer::formationFPCallback, this);
+        // ROS_INFO("FormationLayer::onInitialize END");
     }
 
-    void FormationLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level){
+    void FormationLayer::setupDynamicReconfigure(ros::NodeHandle& nh_){
+        dsrv_ = new dynamic_reconfigure::Server<formation_layer::FormationLayerConfig>(nh_);
+        dynamic_reconfigure::Server<formation_layer::FormationLayerConfig>::CallbackType cb =
+        [this](auto& config, auto level){ reconfigureCB(config, level); };
+        dsrv_->setCallback(cb);
+    }
+
+    void FormationLayer::reconfigureCB(formation_layer::FormationLayerConfig &config, uint32_t level){
         enabled_ = config.enabled;
-    }   
+    }     
+        
+    //Destructor
+    FormationLayer::~FormationLayer(){
+    if (dsrv_)
+        delete dsrv_;
+    }  
 
     void FormationLayer::formationFPCallback(const geometry_msgs::PolygonStamped &msg)
     {
@@ -34,7 +46,7 @@ namespace formation_layer_namespace
             geometry_msgs::Point p;
             p.x = point.x;
             p.y = point.y;
-            ROS_INFO_THROTTLE(10,"p=(%f,%f)",p.x,p.y);
+            ROS_INFO("p=(%f,%f)",p.x,p.y);
             formation_fp.push_back(p);
             ROS_INFO_THROTTLE(10,"Formation Callback done"); 
         }
