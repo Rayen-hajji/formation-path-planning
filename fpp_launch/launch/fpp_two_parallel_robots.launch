@@ -58,7 +58,7 @@
 
 		<!--Overwrite the enabled param that defines if new obstacles should be inserted into the global costmap. -->
         <!--Because of the mobile robots detecting each other this would add obstacles where the formation is standing -->
-        <param name="move_base_flex/global_costmap/obstacles/enabled" value="false"/>
+        <param name="move_base_flex/global_costmap/obstacles/enabled" value="true"/>
 
 		<include file="$(find fpp_launch)/launch/launch_utils/formation_costmap.launch">
             <arg name="formation_costmap_config_path" value="$(find fpp_launch)/config/two_parallel_robot_config/formation_costmap_params.yaml"/>
@@ -87,7 +87,7 @@
 
 		<!--Overwrite the enabled param that defines if new obstacles should be inserted into the global costmap. -->
         <!--Because of the mobile robots detecting each other this would add obstacles where the formation is standing -->
-        <param name="move_base_flex/global_costmap/obstacles/enabled" value="false"/>
+        <param name="move_base_flex/global_costmap/obstacles/enabled" value="true"/>
 
         <!--If rviz should also be started for second robot, insert the start of rviz with the specified config here.-->
     </group>

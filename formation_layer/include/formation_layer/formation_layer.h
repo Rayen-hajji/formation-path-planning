@@ -22,6 +22,7 @@ class FormationLayer : public costmap_2d::Layer
 {
 public :
     using Polygon = std::vector<geometry_msgs::Point>;
+    
     FormationLayer();
     virtual ~FormationLayer();
 

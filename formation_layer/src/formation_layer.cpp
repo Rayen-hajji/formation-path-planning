@@ -13,13 +13,17 @@ namespace formation_layer_namespace
     {
         ROS_INFO("FormationLayer::onInitialize");
         this->nh_ = ros::NodeHandle("~/"+ name_);
-        rolling_window_ = layered_costmap_->isRolling(); 
-        current_ = true;
+        rolling_window_ = layered_costmap_->isRolling();
+
+        FormationLayer::matchSize();
+        current_= true;
+
+        formationFPSubs_ = this->nh_.subscribe("/robot0/move_base_flex/formation_footprint",10, &FormationLayer::formationFPCallback, this);
+        
         //Plugin initialization
         dsrv_ = NULL;
         setupDynamicReconfigure(nh_);
-        formationFPSubs_ = this->nh_.subscribe("/robot0/move_base_flex/formation_footprint",10, &FormationLayer::formationFPCallback, this);
-        // ROS_INFO("FormationLayer::onInitialize END");
+        ROS_INFO("FormationLayer::onInitialize END");
     }
 
     void FormationLayer::setupDynamicReconfigure(ros::NodeHandle& nh_){
@@ -29,27 +33,30 @@ namespace formation_layer_namespace
         dsrv_->setCallback(cb);
     }
 
-    void FormationLayer::reconfigureCB(formation_layer::FormationLayerConfig &config, uint32_t level){
-        enabled_ = config.enabled;
-    }     
-        
-    //Destructor
     FormationLayer::~FormationLayer(){
     if (dsrv_)
         delete dsrv_;
-    }  
+    } 
+
+    void FormationLayer::reconfigureCB(formation_layer::FormationLayerConfig &config, uint32_t level){
+        enabled_ = config.enabled;
+    }      
 
     void FormationLayer::formationFPCallback(const geometry_msgs::PolygonStamped &msg)
     {
-        ROS_INFO_THROTTLE(10,"Formation Callback started");
+        ROS_INFO("Formation Callback started");
+        formation_fp.clear();
         for(const auto& point : msg.polygon.points){
             geometry_msgs::Point p;
             p.x = point.x;
             p.y = point.y;
-            ROS_INFO("p=(%f,%f)",p.x,p.y);
-            formation_fp.push_back(p);
-            ROS_INFO_THROTTLE(10,"Formation Callback done"); 
+            p.z = 0;
+            formation_fp.push_back(p);     
         }
+        for(int i = 0; i < formation_fp.size(); ++i){
+            ROS_INFO("FP point[%d]={%f,%f}", i, formation_fp[i].x, formation_fp[i].y);
+        } 
+        ROS_INFO("Formation Callback done");
     }
 
     void FormationLayer::linetrace(int x0, int y0, int x1, int y1, std::vector<PointInt> &cells)
@@ -162,7 +169,7 @@ namespace formation_layer_namespace
     {
         if(!enabled_)
             return;
-        ROS_INFO_THROTTLE(10,"UpdateBounds started");
+        ROS_INFO("UpdateBounds started");
         mark_x_ = robot_x;
         mark_y_ = robot_y;
 
@@ -170,7 +177,7 @@ namespace formation_layer_namespace
         *min_y = std::min(*min_y, mark_y_);
         *max_x = std::max(*max_x, mark_x_);
         *max_y = std::max(*max_y, mark_y_);
-        ROS_INFO_THROTTLE(10,"UpdateBounds done");
+        ROS_INFO("UpdateBounds done");
     }
 
     void FormationLayer::setPolygonCost(costmap_2d::Costmap2D &master_grid, const Polygon &polygon,
@@ -202,13 +209,13 @@ namespace formation_layer_namespace
     }
     void FormationLayer::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
     {
-        ROS_INFO_THROTTLE(10,"UpdateCosts started");
+        ROS_INFO("UpdateCosts started");
         if(!enabled_)
             return;
         for (int i = 0; i < formation_fp.size(); ++i) {
         setPolygonCost(master_grid, formation_fp, FREE_SPACE, min_i, min_j, max_i, max_j, true);
         }
-        ROS_INFO_THROTTLE(10,"UpdateCosts done");
+        ROS_INFO("UpdateCosts done");
         // unsigned int mx;
         // unsigned int my;
         // if(master_grid.worldToMap(mark_x_, mark_y_, mx, my)){
