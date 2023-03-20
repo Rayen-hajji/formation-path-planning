@@ -1,0 +1,5 @@
+<library path="lib/libformation_layer_footprint">
+    <class type="formation_layer_footprint_namespace::FormationLayerFootprint" base_class_type="costmap_2d::Layer">
+        <description>Layer that free the area occupied by the unit footprint</description>
+    </class>
+</library>

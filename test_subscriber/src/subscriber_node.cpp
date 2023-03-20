@@ -9,6 +9,7 @@ using namespace std;
 void robotFPCallback_0(const geometry_msgs::PolygonStamped &msg)
 {
     std::vector<geometry_msgs::Point32> fp;
+    fp.clear();
     for(const auto& point_1 : msg.polygon.points){
         geometry_msgs::Point32 p;
         p.x = point_1.x;
@@ -27,7 +28,7 @@ int main(int argc, char **argv){
 
     ros::NodeHandle n;
 
-    ros::Subscriber robot_fp_subs_0_ = n.subscribe("/robot0/move_base_flex/global_costmap/footprint", 10, robotFPCallback_0);
+    ros::Subscriber robot_fp_subs_0_ = n.subscribe("/robot1/move_base_flex/global_costmap/footprint", 10, robotFPCallback_0);
 
     ros::spin();
 
