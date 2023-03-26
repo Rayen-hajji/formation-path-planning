@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+    <param name="robots_number" type="int" value="3"/>
+    
     <!--arg name="gazebo_gui" default="true"/--> <!--Start without Gazebo GUI, RVIZ is enough-->
 
     <!--Variables for the robot0-->

@@ -2,15 +2,24 @@
 #define FORMATION_LAYER_Footprint_H_
 #include <formation_layer_footprint/FormationLayerFootprintConfig.h>
 #include <ros/ros.h>
+#include <costmap_2d/costmap_2d.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf/transform_datatypes.h>
 #include <costmap_2d/layer.h>
 #include <costmap_2d/layered_costmap.h>
-#include <costmap_2d/GenericPluginConfig.h>
+//#include <costmap_2d/GenericPluginConfig.h>
+#include <costmap_2d/footprint.h>
 #include <dynamic_reconfigure/server.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
 #include <vector>
+#include <string>
 
 using namespace std;
+using Polygon = std::vector<geometry_msgs::Point32>;
+using FootprintPolygon = std::vector<geometry_msgs::PolygonStamped>;
 
 namespace formation_layer_footprint_namespace
 {
@@ -21,8 +30,6 @@ struct PointInt {
 class FormationLayerFootprint : public costmap_2d::Layer
 {
 public :
-    using Polygon = std::vector<geometry_msgs::Point32>;
-    using FootprintPolygon = std::vector<geometry_msgs::PolygonStamped>;
     
     FormationLayerFootprint();
     virtual ~FormationLayerFootprint();
@@ -37,21 +44,25 @@ public :
 
 protected : 
     virtual void setupDynamicReconfigure(ros::NodeHandle& nh_);
-
-    bool rolling_window_;
+    // bool rolling_window_;
 
 private :
+    int RobotsNumber;
+    
     ros::NodeHandle nh_;
     dynamic_reconfigure::Server<formation_layer_footprint::FormationLayerFootprintConfig> *dsrv_;
 
-
-
-    ros::Subscriber footprintsubs_1;
+    // ros::Subscriber footprintsubs_1;
+    ros::Subscriber PoseSubscriber_0, PoseSubscriber_1, PoseSubscriber_2;
 
     double mark_x_, mark_y_;
 
     //polygon to save a footprint  
-    Polygon RobotFootprint;
+    Polygon RobotFootprint_0, RobotFootprint_1, RobotFootprint_2;
+    geometry_msgs::PolygonStamped RobotFootprintStamped_0, RobotFootprintStamped_1, RobotFootprintStamped_2;
+
+    // Variable to save a position 
+    geometry_msgs::PoseWithCovarianceStamped RobotPose_0, RobotPose_1, RobotPose_2;
 
     //Vector to save the footprints of participated Robots
     FootprintPolygon RobotsFootprints;
@@ -60,7 +71,21 @@ private :
     void reconfigureCB(formation_layer_footprint::FormationLayerFootprintConfig &config, uint32_t level);
 
     //callback function of the robot footprint
-    void footprintCallback(const geometry_msgs::PolygonStamped &msg);
+    // void footprintCallback(const geometry_msgs::PolygonStamped &msg);
+
+    // function that creates Subscribers and Callback functions for the robots
+    // void DoItAllFunction(int n);
+    
+    //callback function of the robot position 
+    void poseCallback_0(const geometry_msgs::PoseWithCovarianceStamped &msg);
+    void poseCallback_1(const geometry_msgs::PoseWithCovarianceStamped &msg);
+    void poseCallback_2(const geometry_msgs::PoseWithCovarianceStamped &msg);
+
+    /// \brief             calculate Unit Footprint in the Map frame
+    /// \param position    position of the Unit
+    void getUnitFootprint_0(const geometry_msgs::PoseWithCovarianceStamped &position);
+    void getUnitFootprint_1(const geometry_msgs::PoseWithCovarianceStamped &position);
+    void getUnitFootprint_2(const geometry_msgs::PoseWithCovarianceStamped &position);
 
     /// \brief             rasterizes line between two map coordinates into a set of cells
     /// \note              since Costmap2D::raytraceLine() is based on the size_x and since we want to rasterize polygons that might also be located outside map bounds we provide a modified raytrace
