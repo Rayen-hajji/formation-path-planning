@@ -48,7 +48,7 @@ protected :
     // bool rolling_window_;
 
 private :
-    int RobotsNumber;
+    int robots_number;
     
     ros::NodeHandle nh_;
     dynamic_reconfigure::Server<formation_layer_footprint::FormationLayerFootprintConfig> *dsrv_;
@@ -63,13 +63,13 @@ private :
     geometry_msgs::PolygonStamped RobotFootprintStamped_0, RobotFootprintStamped_1, RobotFootprintStamped_2;
 
     //vector to save all units poses
-    vector<geometry_msgs::PoseWithCovarianceStamped> Robotposes;
+    vector<geometry_msgs::PoseWithCovarianceStamped> robot_poses;
     
     //vector to save all subscribers
     vector<ros::Subscriber> Subscribers;
 
     //vector to save all units footprints
-    vector<Polygon> RobotFootprints;
+    vector<Polygon> robots_footprints;
 
     // Variable to save a position 
     geometry_msgs::PoseWithCovarianceStamped RobotPose_0, RobotPose_1, RobotPose_2;
@@ -83,6 +83,9 @@ private :
     /// \brief      create callback functions for the units positions 
     ///  \param n   number of the units 
     void createCallbacks(int n);
+
+    void poseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg);
+
     
     //callback function of the robot position 
     // void poseCallback_0(const geometry_msgs::PoseWithCovarianceStamped &msg);

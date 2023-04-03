@@ -16,51 +16,44 @@ namespace formation_layer_footprint_namespace
         this->nh_ = ros::NodeHandle("~/"+ name_);
         // rolling_window_ = layered_costmap_->isRolling();
 
+        // Initializing vectors
+        this->robot_poses = vector<geometry_msgs::PoseWithCovarianceStamped>();
+        // this->robots_footprints = vector<Polygon>();
+
         FormationLayerFootprint::matchSize();
         current_= true;
 
         //get the number of robots from the launch file
-        std::string RobotsNumber_key;
-        if(this->nh_.searchParam("robots_number", RobotsNumber_key)){
-			this->nh_.getParam(RobotsNumber_key, RobotsNumber);
-            ROS_INFO("Number of RObots is:%d", RobotsNumber);
-            for (int i = 0; i < RobotsNumber; i++){
+        std::string robots_number_key;
+        if(this->nh_.searchParam("robots_number", robots_number_key)){
+			this->nh_.getParam(robots_number_key, robots_number);
+            ROS_INFO("Number of Robots is:%d", robots_number);
+
+            for (int i = 0; i < robots_number; i++){
 
                 //position topic to subscribe to
                 std::string topic_name = "/robot" + std::to_string(i) + "/amcl_pose";
                 ROS_INFO("topic %d created : %s",i,topic_name.c_str());
                 
-                //create Callback functions
+                //create Callback function 
                 callbacks.push_back ([this, i](const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
                     ROS_INFO("%d Callback",i);
-                    ROS_INFO("%f",msg->pose.pose.position.x);
-                    auto x = msg->pose.pose.position.x;
-                    ROS_INFO("x = %f", x);
-                    Robotposes[i].pose.pose.position.x = msg->pose.pose.position.x;
-                    Robotposes[i].pose.pose.position.y = msg->pose.pose.position.y;
-                    Robotposes[i].pose.pose.orientation.w = msg->pose.pose.orientation.w;
+                    this->robot_poses.push_back(*msg.get());
+                    // robot_poses[i].pose.pose.position.x = msg->pose.pose.position.x;
+                    // robot_poses[i].pose.pose.position.y = msg->pose.pose.position.y;
+                    // robot_poses[i].pose.pose.orientation.w = msg->pose.pose.orientation.w;
                     ROS_INFO("Callback function %d is created",i);
-                    ROS_INFO("Robot position is : (%f,%f)",Robotposes[i].pose.pose.position.x,Robotposes[i].pose.pose.position.y);
+                    ROS_INFO("Robot position is : (%f,%f)",robot_poses[i].pose.pose.position.x,robot_poses[i].pose.pose.position.y);
                 });
 
                 //Subscriber
                 Subscribers.push_back(this->nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>(topic_name, 10, callbacks[i]));
 
-                // Subscribers.push_back(this->nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>(topic_name, 10, 
-                //     [this,i](const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
-                //         ROS_INFO("%d st subscriber",i);
-                //         Robotposes[i].pose.pose.position.x = msg->pose.pose.orientation.x;
-                //         Robotposes[i].pose.pose.position.y = msg->pose.pose.position.y;
-                //         Robotposes[i].pose.pose.orientation.w = msg->pose.pose.orientation.w;
-                //         ROS_INFO_STREAM("position of the Robot"<<i<<"is"<<Robotposes[i].pose.pose.position.x);
-                //     }
-                // ));
-
+                //Only for testing
                 ROS_INFO("Topic %d is %s", i, Subscribers[i].getTopic().c_str());
-                if(i == RobotsNumber-1)
+                if(i == robots_number-1)
                     ROS_INFO("all Subscribers are created");
                 else ROS_INFO("Was in Loop");
-
             }
         }
 		else
@@ -90,7 +83,6 @@ namespace formation_layer_footprint_namespace
         // PoseSubscriber_0 = this->nh_.subscribe("/robot0/amcl_pose", 10, &FormationLayerFootprint::poseCallback_0, this );
         //Plugin initialization
 
-
         dsrv_ = NULL;
         setupDynamicReconfigure(nh_);
         ROS_INFO("FormationLayerFootprint::onInitialize END");
@@ -112,30 +104,23 @@ namespace formation_layer_footprint_namespace
         enabled_ = config.enabled;
     }      
 
-    // void FormationLayerFootprint::createCallbacks(int n){
-    //     for(int i; i < n ; i++){
-    //         std::function<void(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)> cb = [this, i](const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
-    //         Robotposes[i].pose.pose.position.x = msg->pose.pose.orientation.x;
-    //         Robotposes[i].pose.pose.position.y = msg->pose.pose.position.y;
-    //         Robotposes[i].pose.pose.orientation.w = msg->pose.pose.orientation.w;
-    //         };
-    //         callbacks.push_back(cb);
-    //         if(i = n-1) 
-    //             ROS_INFO("Callbacks are created");          
-    //     }
-    // }
-
-    // void FormationLayerFootprint::poseCallback_0(const geometry_msgs::PoseWithCovarianceStamped &msg){
-    //     RobotPose_0.pose.pose.position.x = msg.pose.pose.position.x;
-    //     RobotPose_0.pose.pose.position.y = msg.pose.pose.position.y;
-    //     RobotPose_0.pose.pose.orientation.w = msg.pose.pose.orientation.w;
-    //     ROS_INFO("PoseCallback done current Robot1 position =(%f,%f)", RobotPose_0.pose.pose.position.x, RobotPose_0.pose.pose.position.y);
+    // void FormationLayerFootprint::poseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
+    // {
+    //     ROS_INFO("poseCallback_0 is called");
+    //     ROS_INFO_STREAM(msg->header.frame_id);
+    //     this->robot_poses.push_back(*msg.get());
+    //     // this->robot_poses[0] = *msg.get();
+    //     // robot_poses[0].pose.pose.position.x = msg->pose.pose.orientation.x;
+    //     // robot_poses[0].pose.pose.position.y = msg->pose.pose.position.y;
+    //     // robot_poses[0].pose.pose.orientation.w = msg->pose.pose.orientation.w;
+    //     ROS_INFO("poseCallback_0 is finished");
     // }
 
     void FormationLayerFootprint::getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, Polygon RobotFootprint){
         ROS_INFO("getUnitFootprint started");
         geometry_msgs::PolygonStamped RobotFootprintStamped;
-        costmap_2d::transformFootprint(position.pose.pose.position.x, position.pose.pose.position.y, position.pose.pose.orientation.w, getFootprint() , RobotFootprintStamped );
+        costmap_2d::transformFootprint(position.pose.pose.position.x, position.pose.pose.position.y,
+                        position.pose.pose.orientation.w, getFootprint() , RobotFootprintStamped );
         RobotFootprint.clear();
         for(const auto& point : RobotFootprintStamped.polygon.points){
             geometry_msgs::Point32 p;
@@ -314,12 +299,16 @@ namespace formation_layer_footprint_namespace
         ROS_INFO("UpdateCosts started");
         if(!enabled_)
             return;
-        for(int i = 0; i < RobotsNumber; i++){
+        this->robots_footprints = vector<Polygon>();
+        for(int i = 0; i < robots_number; i++){
+            Polygon footprint;
             ROS_INFO("getUnitFootprint from updateCosts started");
-            getUnitFootprint(Robotposes[i], RobotFootprints[i]);//RobotFootprints[i]//
+            ROS_INFO("position of robot %d is %f, %f", i, robot_poses[i].pose.pose.position.x, robot_poses[i].pose.pose.position.y);
+            getUnitFootprint(this->robot_poses[i], footprint); // this->robots_footprints[i]
             ROS_INFO("setPolygonCost from updateCosts started");
-            setPolygonCost(master_grid, RobotFootprints[i], FREE_SPACE, min_i, min_j, max_i, max_j, true); //RobotFootprints[i]
+            setPolygonCost(master_grid, footprint, FREE_SPACE, min_i, min_j, max_i, max_j, true); //RobotFootprints[i]
+            footprint.clear();
         }
         ROS_INFO("UpdateCosts done");
     }
-}//end_namespace
+}//end_namespace                                                                   
