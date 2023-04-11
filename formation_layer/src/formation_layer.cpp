@@ -212,9 +212,9 @@ namespace formation_layer_namespace
         ROS_INFO("UpdateCosts started");
         if(!enabled_)
             return;
-        for (int i = 0; i < formation_fp.size(); ++i) {
+        // for (int i = 0; i < formation_fp.size(); ++i) {
         setPolygonCost(master_grid, formation_fp, FREE_SPACE, min_i, min_j, max_i, max_j, true);
-        }
+        // }
         ROS_INFO("UpdateCosts done");
         // unsigned int mx;
         // unsigned int my;

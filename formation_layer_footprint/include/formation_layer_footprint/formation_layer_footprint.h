@@ -19,8 +19,8 @@
 #include <functional>
 
 using namespace std;
-using Polygon = std::vector<geometry_msgs::Point32>;
-using FootprintPolygon = std::vector<geometry_msgs::PolygonStamped>;
+using polygon = vector<geometry_msgs::Point>;
+using footprintPolygon = vector<geometry_msgs::PolygonStamped>;
 
 namespace formation_layer_footprint_namespace
 {
@@ -58,9 +58,6 @@ private :
 
     double mark_x_, mark_y_;
 
-    //polygon to save a footprint  
-    Polygon RobotFootprint_0, RobotFootprint_1, RobotFootprint_2;
-    geometry_msgs::PolygonStamped RobotFootprintStamped_0, RobotFootprintStamped_1, RobotFootprintStamped_2;
 
     //vector to save all units poses
     vector<geometry_msgs::PoseWithCovarianceStamped> robot_poses;
@@ -69,13 +66,16 @@ private :
     vector<ros::Subscriber> Subscribers;
 
     //vector to save all units footprints
-    vector<Polygon> robots_footprints;
+    vector<polygon> robots_footprints;
+
+    //polygon to save footprint
+    polygon footprint;
 
     // Variable to save a position 
-    geometry_msgs::PoseWithCovarianceStamped RobotPose_0, RobotPose_1, RobotPose_2;
+    geometry_msgs::PoseWithCovarianceStamped RobotPose;
 
     //Vector to save the footprints of participated Robots
-    FootprintPolygon RobotsFootprints;
+    footprintPolygon RobotsFootprints;
     
 
     void reconfigureCB(formation_layer_footprint::FormationLayerFootprintConfig &config, uint32_t level);
@@ -94,7 +94,7 @@ private :
 
     /// \brief             calculate Unit Footprint in the Map frame
     /// \param position    position of the Unit
-    void getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, Polygon RobotFootprint);
+    void getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, polygon &RobotFootprint, int index);
     // void getUnitFootprint_0(const geometry_msgs::PoseWithCovarianceStamped &position);
     // void getUnitFootprint_1(const geometry_msgs::PoseWithCovarianceStamped &position);
     // void getUnitFootprint_2(const geometry_msgs::PoseWithCovarianceStamped &position);
@@ -131,7 +131,7 @@ private :
     /// \param max_i          maximum bound on the horizontal map index/coordinate
     /// \param max_j          maximum bound on the vertical map index/coordinate
     /// \param fill_polygon   if true, tue cost for the interior of the polygon will be set as well
-    void setPolygonCost(costmap_2d::Costmap2D &master_grid, const Polygon &polygon,
+    void setPolygonCost(costmap_2d::Costmap2D &master_grid, const polygon &polygon,
                         unsigned char cost, int min_i, int min_j, int max_i, int max_j, bool fill_polygon);
     };
 }
