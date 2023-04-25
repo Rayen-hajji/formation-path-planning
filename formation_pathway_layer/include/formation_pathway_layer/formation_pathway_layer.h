@@ -1,81 +1,65 @@
-#ifndef FORMATION_LAYER_Footprint_H_
-#define FORMATION_LAYER_Footprint_H_
-#include <formation_layer_footprint/FormationLayerFootprintConfig.h>
+#ifndef FORMATION_LAYER_H_
+#define FORMATION_LAYER_H_
+#include <formation_pathway_layer/FormationPathwayLayerConfig.h>
 #include <ros/ros.h>
-#include <costmap_2d/costmap_2d.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <tf/transform_datatypes.h>
 #include <costmap_2d/layer.h>
 #include <costmap_2d/layered_costmap.h>
-#include <costmap_2d/footprint.h>
+#include <costmap_2d/GenericPluginConfig.h>
 #include <dynamic_reconfigure/server.h>
-#include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
 #include <vector>
-#include <string>
-#include <iostream>
-#include <functional>
 
 using namespace std;
-using polygon = vector<geometry_msgs::Point>;
-// using footprintPolygon = vector<geometry_msgs::PolygonStamped>;
-
-namespace formation_layer_footprint_namespace
+namespace formation_pathway_layer_namespace
 {
 struct PointInt {
     int x;
     int y;
 };
-class FormationLayerFootprint : public costmap_2d::Layer
+class FormationPathwayLayer : public costmap_2d::Layer
 {
 public :
+    using Polygon = std::vector<geometry_msgs::Point>;
     
-    FormationLayerFootprint();
-    virtual ~FormationLayerFootprint();
+    FormationPathwayLayer();
+    virtual ~FormationPathwayLayer();
 
     virtual void onInitialize();
     virtual void updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x, double* min_y, double* max_x,double* max_y);
     virtual void updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
 
-protected : 
+    // virtual void activate();
+    // virtual void deactivate();
+    // virtual void reset();
 
+protected : 
     virtual void setupDynamicReconfigure(ros::NodeHandle& nh_);
 
+    bool rolling_window_;
+
 private :
-    
     ros::NodeHandle nh_;
-    ros::Subscriber formationFPSubs;
-    dynamic_reconfigure::Server<formation_layer_footprint::FormationLayerFootprintConfig> *dsrv_;
+    dynamic_reconfigure::Server<formation_pathway_layer::FormationPathwayLayerConfig> *dsrv_;
 
-    //vector to save the Callback functions
-    vector<std::function<void(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)>> callbacks;
+    PointInt first_path_point, last_path_point;
 
-    //points to mark the minimum and maximum of the formation footprint
-    double mark_x_max, mark_y_max, mark_x_min, mark_y_min; 
+    vector<PointInt> path;
 
-    int robots_number;
+    Polygon polygon_path, polygon_obstacle, polygon_obstacle2;
 
-    //vector to save all units poses
-    vector<geometry_msgs::PoseWithCovarianceStamped> robot_poses;
-    
-    //vector to save all subscribers
-    vector<ros::Subscriber> Subscribers;
+    ros::Subscriber formationFPSubs_;
 
-    //polygon to save footprint
-    polygon footprint;
+    double mark_x_, mark_y_;
 
     //polygon to save the formation footprint  
-    polygon formation_fp;
+    // Polygon formation_fp;
     
-    void formationFPCallback(const geometry_msgs::PolygonStamped &msg);
 
-    void reconfigureCB(formation_layer_footprint::FormationLayerFootprintConfig &config, uint32_t level);
+    void reconfigureCB(formation_pathway_layer::FormationPathwayLayerConfig &config, uint32_t level);
 
-    /// \brief             calculate Unit Footprint in the Map frame
-    /// \param position    position of the Unit
-    void getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, polygon &RobotFootprint, int index);
+    //callback function of the formation footprint
+    // void formationFPCallback(const geometry_msgs::PolygonStamped &msg);
 
     /// \brief             rasterizes line between two map coordinates into a set of cells
     /// \note              since Costmap2D::raytraceLine() is based on the size_x and since we want to rasterize polygons that might also be located outside map bounds we provide a modified raytrace
@@ -109,7 +93,7 @@ private :
     /// \param max_i          maximum bound on the horizontal map index/coordinate
     /// \param max_j          maximum bound on the vertical map index/coordinate
     /// \param fill_polygon   if true, tue cost for the interior of the polygon will be set as well
-    void setPolygonCost(costmap_2d::Costmap2D &master_grid, const polygon &polygon,
+    void setPolygonCost(costmap_2d::Costmap2D &master_grid, const Polygon &polygon,
                         unsigned char cost, int min_i, int min_j, int max_i, int max_j, bool fill_polygon);
     };
 }

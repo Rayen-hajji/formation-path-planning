@@ -1,0 +1,5 @@
+<library path="lib/libformation_pathway_layer">
+    <class type="formation_pathway_layer_namespace::FormationPathwayLayer" base_class_type="costmap_2d::Layer">
+        <description>Layer that free a path between two obstacles</description>
+    </class>
+</library>
