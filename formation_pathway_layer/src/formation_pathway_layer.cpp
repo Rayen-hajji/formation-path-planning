@@ -19,6 +19,32 @@ namespace formation_pathway_layer_namespace
         FormationPathwayLayer::matchSize();
         current_= true;
 
+        //get the robots number from launch file
+        std::string robots_number_key;
+        if(this->nh_.searchParam("robots_number", robots_number_key))
+			this->nh_.getParam(robots_number_key, robots_number);
+        else {
+            ROS_ERROR("FormationPathwayLayer::onInitialize: robots_number not found in the Launch File");
+            return;
+        }
+
+        //get the initial y_positions of the robots
+        this->y_positions = vector<double>();
+        for(int i = 0 ; i < robots_number ; i++){
+            std:: string argument_name = "robot" + std::to_string(i) + "_y_pos";
+            ROS_INFO("parameter name %s", argument_name.c_str());
+            std::string y_position_key;
+            double position;
+            if(this->nh_.searchParam(argument_name, y_position_key)){
+                this->nh_.getParam(y_position_key, position);
+                this->y_positions.push_back(position);
+            }
+            else {
+                ROS_ERROR("FormationPathwayLayer::onInitialize: %s not found in the Launch File", argument_name.c_str());
+                return;
+            }
+        }
+
         // formationFPSubs_ = this->nh_.subscribe("/robot0/move_base_flex/formation_footprint",10, &FormationPathwayLayer::formationFPCallback, this);
         
         //Plugin initialization
@@ -59,6 +85,21 @@ namespace formation_pathway_layer_namespace
     //     } 
     //     ROS_INFO("Formation Callback done");
     // }
+
+    double FormationPathwayLayer::calculaterange(std::vector<double> positions, double safety_distance){
+        double max = positions[0];
+        double min = positions[0];
+        for (int i=0 ; i < positions.size() ; i++){
+            if (positions[i] > max){
+                max = positions[i];
+            }
+            if (positions[i] < min){
+                min = positions[i];
+            }
+        }
+        return max - min + 0.64 + (2*safety_distance);
+    }
+    
 
     void FormationPathwayLayer::linetrace(int x0, int y0, int x1, int y1, std::vector<PointInt> &cells)
     {
@@ -213,44 +254,19 @@ namespace formation_pathway_layer_namespace
         ROS_INFO("UpdateCosts started");
         if(!enabled_)
             return;
+        for(int i = 0; i < 3; i++)
+        ROS_INFO("y_position of robot %d is %f",i,y_positions[i]);
+        
+        if(!y_positions.empty()){
+            formation_width = calculaterange(this->y_positions, 0.3);
+        }
+        // formation_width = calculaterange(this->y_positions);
+        ROS_INFO("formstion width = %f",formation_width);
         master_grid.worldToMapNoBounds(-3.2,-2.65,first_path_point.x,first_path_point.y);
         master_grid.worldToMapNoBounds(3.30,-2.68,last_path_point.x,last_path_point.y);
         linetrace(first_path_point.x, first_path_point.y, last_path_point.x, last_path_point.y, path);
         for(int i = 0 ; i < path.size() ; i++){
             master_grid.setCost(path[i].x,path[i].y,FREE_SPACE);
         }
-        // geometry_msgs::Point point_1,point_2,point_3,point_4;
-        // point_1.x = 6; point_1.y=-1;
-        // point_2.x = 6; point_2.y = -4;
-        // point_3.x = -5; point_3.y = -4;
-        // point_4.x = -5 ; point_4.y = -1;
-        // polygon_path.push_back(point_1);
-        // polygon_path.push_back(point_2);
-        // polygon_path.push_back(point_3);
-        // polygon_path.push_back(point_4);
-        // setPolygonCost(master_grid, polygon_path, FREE_SPACE, min_i, min_j, max_i, max_j, true);
-
-        // geometry_msgs::Point Obpoint_1,Obpoint_2,Obpoint_3,Obpoint_4;
-        // Obpoint_1.x = 2.99; Obpoint_1.y =-7;
-        // Obpoint_2.x = 2.99; Obpoint_2.y = -10;
-        // Obpoint_3.x = -2; Obpoint_3.y = -10;
-        // Obpoint_4.x = -2 ; Obpoint_4.y = -7;
-        // polygon_obstacle.push_back(Obpoint_1);
-        // polygon_obstacle.push_back(Obpoint_2);
-        // polygon_obstacle.push_back(Obpoint_3);
-        // polygon_obstacle.push_back(Obpoint_4);
-        // setPolygonCost(master_grid, polygon_obstacle, LETHAL_OBSTACLE, min_i, min_j, max_i, max_j, true);
-
-        // geometry_msgs::Point Obpoint_5,Obpoint_6,Obpoint_7,Obpoint_8;
-        // Obpoint_5.x = -3; Obpoint_5.y =9.98;
-        // Obpoint_6.x = -3; Obpoint_6.y = 7.98;
-        // Obpoint_7.x = 4; Obpoint_7.y = 7.98;
-        // Obpoint_8.x = 4 ; Obpoint_8.y = 9.98;
-        // polygon_obstacle2.push_back(Obpoint_5);
-        // polygon_obstacle2.push_back(Obpoint_6);
-        // polygon_obstacle2.push_back(Obpoint_7);
-        // polygon_obstacle2.push_back(Obpoint_8);
-        // setPolygonCost(master_grid, polygon_obstacle2, LETHAL_OBSTACLE, min_i, min_j, max_i, max_j, true);
-
     }
 }//end_namespace

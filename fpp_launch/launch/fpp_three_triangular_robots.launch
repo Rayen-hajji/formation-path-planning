@@ -1,25 +1,30 @@
 <?xml version="1.0"?>
 <launch>
+
+    <!--parameters added for the formation and pathway layers-->
     <param name="robots_number" type="int" value="3"/>
-    
+    <param name="robot0_y_pos" type="double" value="0.0"/>
+    <param name="robot1_y_pos" type="double" value="1.0"/>
+    <param name="robot2_y_pos" type="double" value="-1.0"/>
+
     <!--arg name="gazebo_gui" default="true"/--> <!--Start without Gazebo GUI, RVIZ is enough-->
 
     <!--Variables for the robot0-->
     <arg name="robot0_name" value="robot0"/>
     <arg name="robot0_x_pos" default="-8.0"/>
-    <arg name="robot0_y_pos" default="0.0"/>
+    <arg name="robot0_y_pos" default="5.0"/>
     <arg name="robot0_yaw_rot" default="0.0"/>
 
     <!--Variables for the robot1-->
     <arg name="robot1_name" value="robot1"/>
     <arg name="robot1_x_pos" default="-9.0"/>
-    <arg name="robot1_y_pos" default="1.0"/>
+    <arg name="robot1_y_pos" default="6.0"/>
     <arg name="robot1_yaw_rot" default="0.0"/>
 
     <!--Variables for the robot2-->
     <arg name="robot2_name" value="robot2"/>
     <arg name="robot2_x_pos" default="-9.0"/>
-    <arg name="robot2_y_pos" default="-1.0"/>
+    <arg name="robot2_y_pos" default="4.0"/>
     <arg name="robot2_yaw_rot" default="0.0"/>
 
     <!--Constant values that cant be adjusted from outside the launch file-->

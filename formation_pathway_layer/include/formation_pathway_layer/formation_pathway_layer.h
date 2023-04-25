@@ -42,6 +42,8 @@ private :
     ros::NodeHandle nh_;
     dynamic_reconfigure::Server<formation_pathway_layer::FormationPathwayLayerConfig> *dsrv_;
 
+    int robots_number;
+
     PointInt first_path_point, last_path_point;
 
     vector<PointInt> path;
@@ -49,6 +51,10 @@ private :
     Polygon polygon_path, polygon_obstacle, polygon_obstacle2;
 
     ros::Subscriber formationFPSubs_;
+
+    vector<double> y_positions;
+
+    double  formation_width;
 
     double mark_x_, mark_y_;
 
@@ -69,6 +75,11 @@ private :
     /// \param x1          line end x-coordinate (map frame)
     /// \param y1          line end y-coordinate (map frame)
     /// \param[out] cells  new cells in map coordinates are pushed back on this container
+    
+    /// @brief  \brief     calculates the range of the formation
+    /// @param positions   y poisitions of the units
+    double calculaterange(std::vector<double> positions, double safety_distance);
+    
     void linetrace(int x0, int y0, int x1, int y1, std::vector<PointInt> &cells);
     
     /// \brief                     extracts the boundary of a polygon in terms of map cells
