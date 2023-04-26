@@ -9,6 +9,8 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
 #include <vector>
+#include <yaml-cpp/yaml.h>
+#include <ros/package.h>
 
 using namespace std;
 namespace formation_pathway_layer_namespace
@@ -48,13 +50,15 @@ private :
 
     vector<PointInt> path;
 
-    Polygon polygon_path, polygon_obstacle, polygon_obstacle2;
+    vector<geometry_msgs::Point32> collidor_walls;
 
     ros::Subscriber formationFPSubs_;
 
     vector<double> y_positions;
 
     double  formation_width;
+
+    double safe_distance;
 
     double mark_x_, mark_y_;
 

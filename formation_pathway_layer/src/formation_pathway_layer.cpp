@@ -45,7 +45,35 @@ namespace formation_pathway_layer_namespace
             }
         }
 
-        // formationFPSubs_ = this->nh_.subscribe("/robot0/move_base_flex/formation_footprint",10, &FormationPathwayLayer::formationFPCallback, this);
+        //get the hallway walls coordinates from launch file
+        // std::string param_file;
+        // nh_.param<std::string>("param_file", param_file, "parameters.yaml");
+        // std::string param_path = ros::package::getPath("formation_pathway_layer")+ "/cfg/" + param_file;
+        // YAML::Node yaml_node = YAML::LoadFile(param_path);
+        // std::vector<YAML::Node> coordinates = yaml_node["walls_coordinates"].as<std::vector<YAML::Node>>();
+        // this->collidor_walls = vector<geometry_msgs::Point32>();
+        // for(const auto& coordinate : coordinates){
+        //     geometry_msgs::Point32 point;
+        //     point.x = coordinate["x"].as<double>();
+        //     ROS_INFO("x :%f",point.x);
+        //     point.y = coordinate["y"].as<double>();
+        //     this->collidor_walls.push_back(point);
+        // }
+        
+        
+        
+        // std::string path = ros::package::getPath("formation_pathway_layer")+ "/cfg/pathway.yaml";
+        // ROS_INFO("Path is %s", path.c_str());
+        // YAML::Node yaml_node = YAML::LoadFile(path);
+        // std::vector<YAML::Node> coordinates = yaml_node["coordinates"].as<std::vector<YAML::Node>>(); 
+        // this->collidor_walls = vector<geometry_msgs::Point32>();
+        // for(const auto& coordinate : coordinates){
+        //     geometry_msgs::Point32 point;
+        //     point.x = coordinate["x"].as<double>();
+        //     ROS_INFO("x :%f",point.x);
+        //     point.y = coordinate["y"].as<double>();
+        //     this->collidor_walls.push_back(point);
+        // }
         
         //Plugin initialization
         dsrv_ = NULL;
@@ -97,7 +125,7 @@ namespace formation_pathway_layer_namespace
                 min = positions[i];
             }
         }
-        return max - min + 0.64 + (2*safety_distance);
+        return max - min + 0.64 + (2*this->safe_distance); //0.64 is the diameter of the robot
     }
     
 
@@ -255,13 +283,15 @@ namespace formation_pathway_layer_namespace
         if(!enabled_)
             return;
         for(int i = 0; i < 3; i++)
-        ROS_INFO("y_position of robot %d is %f",i,y_positions[i]);
+            ROS_INFO("y_position of robot %d is %f",i,y_positions[i]);
         
-        if(!y_positions.empty()){
-            formation_width = calculaterange(this->y_positions, 0.3);
+        if((ros::param::has("/robot0/move_base_flex/global_costmap/formation_pathway_layer/safety_distance")) && (!y_positions.empty())){
+            nh_.getParam("/robot0/move_base_flex/global_costmap/formation_pathway_layer/safety_distance", this->safe_distance);
+            ROS_INFO("the safe distance is %f", this->safe_distance);
+            this->formation_width = calculaterange(this->y_positions, this->safe_distance);
+            ROS_INFO("formation can pass through halls of minimim %f width",this->formation_width);
         }
-        // formation_width = calculaterange(this->y_positions);
-        ROS_INFO("formstion width = %f",formation_width);
+
         master_grid.worldToMapNoBounds(-3.2,-2.65,first_path_point.x,first_path_point.y);
         master_grid.worldToMapNoBounds(3.30,-2.68,last_path_point.x,last_path_point.y);
         linetrace(first_path_point.x, first_path_point.y, last_path_point.x, last_path_point.y, path);
