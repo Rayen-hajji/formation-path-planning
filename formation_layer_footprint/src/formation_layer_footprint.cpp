@@ -31,7 +31,7 @@ namespace formation_layer_footprint_namespace
         if(this->nh_.searchParam("robots_number", robots_number_key)){
 			this->nh_.getParam(robots_number_key, robots_number);
             ROS_INFO("Number of Robots is:%d", robots_number);
-
+            
             for (int i = 0; i < robots_number; i++){
 
                 //position topic to subscribe to
@@ -55,6 +55,9 @@ namespace formation_layer_footprint_namespace
                     ROS_INFO("all Subscribers are created");
                 else ROS_INFO("Was in Loop");
             }
+        // ROS_INFO("TEST");
+        
+        // ROS_INFO("robot_poses size is %ld", robot_poses.size());
         }
 		else
 			ROS_ERROR("No Robots number parameter was found.");
@@ -91,28 +94,6 @@ namespace formation_layer_footprint_namespace
             formation_fp.push_back(p);     
         }
     }      
-
-    void FormationLayerFootprint::getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, polygon &RobotFootprint, int index){
-        ROS_INFO("getUnitFootprint started");
-        geometry_msgs::PolygonStamped RobotFootprintStamped;
-        costmap_2d::transformFootprint(position.pose.pose.position.x, position.pose.pose.position.y,
-                        position.pose.pose.orientation.z, getFootprint(), RobotFootprintStamped );
-        RobotFootprint.clear();
-        for(const auto& point : RobotFootprintStamped.polygon.points){
-            geometry_msgs::Point p;
-            p.x = point.x;
-            p.y = point.y;
-            p.z = 0;
-            RobotFootprint.push_back(p);     
-        }
-        //for testing
-        ROS_INFO("getUnitFootprint done");
-        int n = RobotFootprint.size() - 1;
-        ROS_INFO("Footprint %d created, p1 =(%f,%f) , p2 = (%f,%f) , p3 = (%f,%f) , p4 = (%f,%f)",index,RobotFootprint[0].x,RobotFootprint[0].y,
-                                                                                RobotFootprint[1].x,RobotFootprint[1].y,    
-                                                                                RobotFootprint[2].x,RobotFootprint[2].y,
-                                                                                RobotFootprint[n].x,RobotFootprint[n].y);
-    }
 
     void FormationLayerFootprint::linetrace(int x0, int y0, int x1, int y1, std::vector<PointInt> &cells)
     {
@@ -225,7 +206,7 @@ namespace formation_layer_footprint_namespace
         if(!formation_fp.empty()){
             ROS_INFO("updateBounds started");
             mark_x_max = formation_fp[6].x;
-            ROS_INFO("mark_x_max = %f",mark_x_max);
+            // ROS_INFO("mark_x_max = %f",mark_x_max);
             mark_x_min = formation_fp[1].x;
             mark_y_max = formation_fp[3].y;
             mark_y_min = formation_fp[1].y;
@@ -234,21 +215,21 @@ namespace formation_layer_footprint_namespace
             *min_y = std::min(*min_y, mark_y_min);
             *max_x = std::max(*max_x, mark_x_max);
             *max_y = std::max(*max_y, mark_y_max);
-            ROS_INFO("UpdateBounds done");
+            // ROS_INFO("UpdateBounds done");
         }
     }
 
     void FormationLayerFootprint::setPolygonCost(costmap_2d::Costmap2D &master_grid, const polygon &polygon,
                         unsigned char cost, int min_i, int min_j, int max_i, int max_j, bool fill_polygon)
     {   
-        ROS_INFO("setPolygonCost: setPolygonCost started");
-        ROS_INFO("setPolygonCost footprit size is %ld",polygon.size());
+        // ROS_INFO("setPolygonCost: setPolygonCost started");
+        // ROS_INFO("setPolygonCost footprit size is %ld",polygon.size());
         std::vector<PointInt> map_polygon;
         for (unsigned int i = 0; i < polygon.size(); ++i) {
             PointInt loc;
             master_grid.worldToMapNoBounds(polygon[i].x, polygon[i].y, loc.x, loc.y);
             map_polygon.push_back(loc);
-            ROS_INFO("setPolygonCost: first footprint point in Map = (%d,%d)",loc.x,loc.y);
+            // ROS_INFO("setPolygonCost: first footprint point in Map = (%d,%d)",loc.x,loc.y);
         }
 
         std::vector<PointInt> polygon_cells;
@@ -269,18 +250,69 @@ namespace formation_layer_footprint_namespace
         }
     } 
 
+    void FormationLayerFootprint::getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, polygon &RobotFootprint, int index){
+        ROS_INFO("getUnitFootprint started");
+        geometry_msgs::PolygonStamped RobotFootprintStamped;
+        costmap_2d::transformFootprint(position.pose.pose.position.x, position.pose.pose.position.y,
+                        position.pose.pose.orientation.z, getFootprint(), RobotFootprintStamped );
+        RobotFootprint.clear();
+        for(const auto& point : RobotFootprintStamped.polygon.points){
+            geometry_msgs::Point p;
+            p.x = point.x;
+            p.y = point.y;
+            p.z = 0;
+            RobotFootprint.push_back(p);
+            // this->footprint_points.push_back(p);     
+        }
+        //for testing
+        // ROS_INFO("getUnitFootprint done");
+        // int n = RobotFootprint.size() - 1;
+        // ROS_INFO("Footprint %d created, p1 =(%f,%f) , p2 = (%f,%f) , p3 = (%f,%f) , p4 = (%f,%f)",index,RobotFootprint[0].x,RobotFootprint[0].y,
+        //                                                                         RobotFootprint[1].x,RobotFootprint[1].y,    
+        //                                                                         RobotFootprint[2].x,RobotFootprint[2].y,
+        //                                                                         RobotFootprint[n].x,RobotFootprint[n].y);
+    }    
+    
     void FormationLayerFootprint::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
     {
         if(!enabled_)
             return;
+        // if(!footprints.empty()){
+        //     ROS_INFO("UpdateCosts started");
+        //     for(int i = 0; footprints.size(); i++){
+        //         setPolygonCost(master_grid, this->footprints[i], FREE_SPACE, min_i, min_j, max_i, max_j, true);   
+        //     }
+        // }
+        
+        //clean units footprints
         if(!robot_poses.empty()){
+            this->footprint_points = vector<geometry_msgs::Point>();
             ROS_INFO("UC:UpdateCosts started");
             for(int i = 0; i < robot_poses.size(); i++){ 
                 getUnitFootprint(robot_poses[i], this->footprint, i);
-                ROS_INFO("setPolygonCost for robot %d started",i); 
+                for(const auto& point : this->footprint){
+                    this->footprint_points.push_back(point);
+                }
+                // ROS_INFO("setPolygonCost for robot %d started",i); 
                 setPolygonCost(master_grid, this->footprint, FREE_SPACE, min_i, min_j, max_i, max_j, true); 
             }
             ROS_INFO("UC:UpdateCosts done");
+            for(int i=0; i < this->footprint_points.size(); i++)
+                ROS_INFO("UC: footprint_points[%d] = (%f,%f)",i,this->footprint_points[i].x,this->footprint_points[i].y);
         }
+
+        //calculate formation footprint  
+        // if(!robot_poses.empty()){
+        //     this->footprints = vector<polygon>();
+        //     this->footprint_points = vector<geometry_msgs::Point>();
+        //     ROS_INFO("robot_poses is not empty");
+        //     ROS_INFO("robot_poses size is %ld", robot_poses.size());
+        //     for(unsigned int i = 0; i < robot_poses.size(); i++){ 
+        //         ROS_INFO("robot_poses is not empty");
+        //         getUnitFootprint(robot_poses[i], this->footprints[i], i);
+        //         ROS_INFO("first footprint %d created, first point: (%f,%f)",i,footprints[i][0].x,footprints[i][0].y);
+        //     }
+        // }
+
     }
 }//end_namespace                                                                   

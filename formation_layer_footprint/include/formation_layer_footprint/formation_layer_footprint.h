@@ -66,6 +66,12 @@ private :
     //polygon to save footprint
     polygon footprint;
 
+    //polygon to save all footprints
+    std::vector<polygon> footprints;
+
+    //polygon to save all footprints points
+    polygon footprint_points;
+
     //polygon to save the formation footprint  
     polygon formation_fp;
     
