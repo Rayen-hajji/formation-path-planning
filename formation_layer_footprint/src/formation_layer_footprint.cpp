@@ -2,11 +2,10 @@
 #include <pluginlib/class_list_macros.h>
 
 
-
 PLUGINLIB_EXPORT_CLASS(formation_layer_footprint_namespace::FormationLayerFootprint, costmap_2d::Layer)
 
 using costmap_2d::FREE_SPACE;
-using costmap_2d::LETHAL_OBSTACLE;
+
 namespace formation_layer_footprint_namespace
 {
     FormationLayerFootprint::FormationLayerFootprint() {} 
@@ -15,7 +14,6 @@ namespace formation_layer_footprint_namespace
     {
         ROS_INFO("FormationLayerFootprint::onInitialize");
         this->nh_ = ros::NodeHandle("~/"+ name_);
-        // rolling_window_ = layered_costmap_->isRolling();
 
         // Initializing vectors
         this->robot_poses = vector<geometry_msgs::PoseWithCovarianceStamped>();
@@ -23,7 +21,7 @@ namespace formation_layer_footprint_namespace
         FormationLayerFootprint::matchSize();
         current_= true;
         
-        //subscribe to the dormation footprint topic
+        //subscribe to the formation footprint topic
         formationFPSubs = this->nh_.subscribe("/robot0/move_base_flex/formation_footprint",10, &FormationLayerFootprint::formationFPCallback, this);
 
         //get the number of robots from the launch file
@@ -32,35 +30,37 @@ namespace formation_layer_footprint_namespace
 			this->nh_.getParam(robots_number_key, robots_number);
             ROS_INFO("Number of Robots is:%d", robots_number);
             
+
             for (int i = 0; i < robots_number; i++){
 
-                //position topic to subscribe to
+                //subscribe to the robots positions
                 std::string topic_name = "/robot" + std::to_string(i) + "/amcl_pose";
                 ROS_INFO("topic %d created : %s",i,topic_name.c_str());
                 
-                //create Callback function 
+                //create Callback functions 
                 callbacks.push_back ([this, i](const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
                     ROS_INFO("%d Callback",i);
                     this->robot_poses.push_back(*msg.get());
+                    if(this->robot_poses.size() == robots_number+1){
+                        // this->robot_poses.erase(this->robot_poses.begin());
+                        // this->robot_poses.clear();
+                    }
                     ROS_INFO("Callback function %d is created",i);
                     ROS_INFO("Robot %d position is : (%f,%f)",i,robot_poses[i].pose.pose.position.x,robot_poses[i].pose.pose.position.y);
-                });
+                }); 
 
-                //Subscriber
+                //create and save subscribers 
                 Subscribers.push_back(this->nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>(topic_name, 10, callbacks[i]));
 
-                //Only for testing
+                //only for testing
                 ROS_INFO("Topic %d is %s", i, Subscribers[i].getTopic().c_str());
                 if(i == robots_number-1)
                     ROS_INFO("all Subscribers are created");
                 else ROS_INFO("Was in Loop");
             }
-        // ROS_INFO("TEST");
-        
-        // ROS_INFO("robot_poses size is %ld", robot_poses.size());
         }
 		else
-			ROS_ERROR("No Robots number parameter was found.");
+			ROS_ERROR("No Robots number parameter was found in the launch file.");
 
         dsrv_ = NULL;
         setupDynamicReconfigure(nh_);
@@ -199,7 +199,8 @@ namespace formation_layer_footprint_namespace
         }
     }
     
-    void FormationLayerFootprint::updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x, double* min_y, double* max_x, double* max_y)
+    void FormationLayerFootprint::updateBounds(double robot_x, double robot_y, double robot_yaw, double* min_x, double* min_y, 
+                        double* max_x, double* max_y)
     {
         if(!enabled_)
             return;
@@ -222,14 +223,12 @@ namespace formation_layer_footprint_namespace
     void FormationLayerFootprint::setPolygonCost(costmap_2d::Costmap2D &master_grid, const polygon &polygon,
                         unsigned char cost, int min_i, int min_j, int max_i, int max_j, bool fill_polygon)
     {   
-        // ROS_INFO("setPolygonCost: setPolygonCost started");
-        // ROS_INFO("setPolygonCost footprit size is %ld",polygon.size());
         std::vector<PointInt> map_polygon;
+        
         for (unsigned int i = 0; i < polygon.size(); ++i) {
             PointInt loc;
             master_grid.worldToMapNoBounds(polygon[i].x, polygon[i].y, loc.x, loc.y);
             map_polygon.push_back(loc);
-            // ROS_INFO("setPolygonCost: first footprint point in Map = (%d,%d)",loc.x,loc.y);
         }
 
         std::vector<PointInt> polygon_cells;
@@ -261,58 +260,51 @@ namespace formation_layer_footprint_namespace
             p.x = point.x;
             p.y = point.y;
             p.z = 0;
-            RobotFootprint.push_back(p);
-            // this->footprint_points.push_back(p);     
+            RobotFootprint.push_back(p);  
         }
-        //for testing
-        // ROS_INFO("getUnitFootprint done");
-        // int n = RobotFootprint.size() - 1;
-        // ROS_INFO("Footprint %d created, p1 =(%f,%f) , p2 = (%f,%f) , p3 = (%f,%f) , p4 = (%f,%f)",index,RobotFootprint[0].x,RobotFootprint[0].y,
-        //                                                                         RobotFootprint[1].x,RobotFootprint[1].y,    
-        //                                                                         RobotFootprint[2].x,RobotFootprint[2].y,
-        //                                                                         RobotFootprint[n].x,RobotFootprint[n].y);
     }    
-    
+
     void FormationLayerFootprint::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
     {
         if(!enabled_)
             return;
-        // if(!footprints.empty()){
-        //     ROS_INFO("UpdateCosts started");
-        //     for(int i = 0; footprints.size(); i++){
-        //         setPolygonCost(master_grid, this->footprints[i], FREE_SPACE, min_i, min_j, max_i, max_j, true);   
-        //     }
-        // }
-        
-        //clean units footprints
+
         if(!robot_poses.empty()){
             this->footprint_points = vector<geometry_msgs::Point>();
             ROS_INFO("UC:UpdateCosts started");
-            for(int i = 0; i < robot_poses.size(); i++){ 
+            
+            for(int i = 0; i < robot_poses.size(); i++){
+                ROS_INFO("robot_poses size is %d", (int)robot_poses.size());  
                 getUnitFootprint(robot_poses[i], this->footprint, i);
+                if(i>0)
+                    setPolygonCost(master_grid, this->footprint, FREE_SPACE, min_i, min_j, max_i, max_j, true);
                 for(const auto& point : this->footprint){
                     this->footprint_points.push_back(point);
-                }
-                // ROS_INFO("setPolygonCost for robot %d started",i); 
-                setPolygonCost(master_grid, this->footprint, FREE_SPACE, min_i, min_j, max_i, max_j, true); 
+                } 
             }
+
             ROS_INFO("UC:UpdateCosts done");
             for(int i=0; i < this->footprint_points.size(); i++)
                 ROS_INFO("UC: footprint_points[%d] = (%f,%f)",i,this->footprint_points[i].x,this->footprint_points[i].y);
+            
+            this->formation_footprint = findConvexHull(this->footprint_points, this->footprint_points.size());
+            for(int i=0; i<this->formation_footprint.size(); i++){
+                ROS_INFO("UC: formation_footprint[%d] = (%f,%f)",i,this->formation_footprint[i].x,this->formation_footprint[i].y);
+            }
+
+            //publish formation footprint
+            formationFPPub = this->nh_.advertise<geometry_msgs::PolygonStamped>("Layer_formation_footprint", 10);
+            geometry_msgs::PolygonStamped formation_footprint_msg;
+            formation_footprint_msg.header.frame_id = "map";
+            formation_footprint_msg.header.stamp = ros::Time::now();
+            for(const auto& point : this->formation_footprint){
+                geometry_msgs::Point32 p;
+                p.x = point.x;
+                p.y = point.y;
+                p.z = 0;
+                formation_footprint_msg.polygon.points.push_back(p);
+            }
+            formationFPPub.publish(formation_footprint_msg);
         }
-
-        //calculate formation footprint  
-        // if(!robot_poses.empty()){
-        //     this->footprints = vector<polygon>();
-        //     this->footprint_points = vector<geometry_msgs::Point>();
-        //     ROS_INFO("robot_poses is not empty");
-        //     ROS_INFO("robot_poses size is %ld", robot_poses.size());
-        //     for(unsigned int i = 0; i < robot_poses.size(); i++){ 
-        //         ROS_INFO("robot_poses is not empty");
-        //         getUnitFootprint(robot_poses[i], this->footprints[i], i);
-        //         ROS_INFO("first footprint %d created, first point: (%f,%f)",i,footprints[i][0].x,footprints[i][0].y);
-        //     }
-        // }
-
     }
 }//end_namespace                                                                   

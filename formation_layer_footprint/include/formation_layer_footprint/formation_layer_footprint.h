@@ -1,6 +1,7 @@
 #ifndef FORMATION_LAYER_Footprint_H_
 #define FORMATION_LAYER_Footprint_H_
 #include <formation_layer_footprint/FormationLayerFootprintConfig.h>
+#include <formation_layer_footprint/fpl_utils.cpp>
 #include <ros/ros.h>
 #include <costmap_2d/costmap_2d.h>
 #include <tf2_ros/transform_listener.h>
@@ -20,7 +21,6 @@
 
 using namespace std;
 using polygon = vector<geometry_msgs::Point>;
-// using footprintPolygon = vector<geometry_msgs::PolygonStamped>;
 
 namespace formation_layer_footprint_namespace
 {
@@ -28,6 +28,7 @@ struct PointInt {
     int x;
     int y;
 };
+
 class FormationLayerFootprint : public costmap_2d::Layer
 {
 public :
@@ -47,6 +48,13 @@ private :
     
     ros::NodeHandle nh_;
     ros::Subscriber formationFPSubs;
+    
+    //preliminary solution to get the formation footprint OF THE Robot0
+    ros::Subscriber robot0Subs;
+
+    //formation footprint publisher
+    ros::Publisher formationFPPub;
+    
     dynamic_reconfigure::Server<formation_layer_footprint::FormationLayerFootprintConfig> *dsrv_;
 
     //vector to save the Callback functions
@@ -55,26 +63,30 @@ private :
     //points to mark the minimum and maximum of the formation footprint
     double mark_x_max, mark_y_max, mark_x_min, mark_y_min; 
 
+    //variable to save the number of robots used in the formation 
     int robots_number;
 
-    //vector to save all units poses
+    // vector to save all units positions
     vector<geometry_msgs::PoseWithCovarianceStamped> robot_poses;
     
-    //vector to save all subscribers
+    // vector to save all ros subscribers
     vector<ros::Subscriber> Subscribers;
 
-    //polygon to save footprint
+    // polygon to save a single footprint
     polygon footprint;
 
-    //polygon to save all footprints
+    // polygon to save all footprints
     std::vector<polygon> footprints;
 
-    //polygon to save all footprints points
+    // polygon to save all footprints points
     polygon footprint_points;
 
-    //polygon to save the formation footprint  
+    // polygon to save the subscribed formation footprint   
     polygon formation_fp;
-    
+
+    // polygon to save the calculated formation footprint
+    polygon formation_footprint;
+
     void formationFPCallback(const geometry_msgs::PolygonStamped &msg);
 
     void reconfigureCB(formation_layer_footprint::FormationLayerFootprintConfig &config, uint32_t level);
