@@ -1,7 +1,8 @@
 #ifndef FORMATION_LAYER_Footprint_H_
 #define FORMATION_LAYER_Footprint_H_
 #include <formation_layer_footprint/FormationLayerFootprintConfig.h>
-#include <formation_layer_footprint/fpl_utils.cpp>
+#include <formation_layer_footprint/convex_hull.cpp>
+// #include <formation_layer_footprint/enclosing_circle.cpp>
 #include <ros/ros.h>
 #include <costmap_2d/costmap_2d.h>
 #include <tf2_ros/transform_listener.h>
@@ -14,10 +15,14 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf/transform_datatypes.h>
+#include <geometry_msgs/Quaternion.h>
 #include <vector>
 #include <string>
 #include <iostream>
 #include <functional>
+#include <map>
 
 using namespace std;
 using polygon = vector<geometry_msgs::Point>;
@@ -28,6 +33,12 @@ struct PointInt {
     int x;
     int y;
 };
+
+struct Circle{
+    geometry_msgs::Point center;
+    float radius;
+};
+
 
 class FormationLayerFootprint : public costmap_2d::Layer
 {
@@ -54,6 +65,7 @@ private :
 
     //formation footprint publisher
     ros::Publisher formationFPPub;
+    ros::Publisher  footprintsPub;
     
     dynamic_reconfigure::Server<formation_layer_footprint::FormationLayerFootprintConfig> *dsrv_;
 
@@ -68,6 +80,9 @@ private :
 
     // vector to save all units positions
     vector<geometry_msgs::PoseWithCovarianceStamped> robot_poses;
+
+    //map to save robot positions
+    map<std::string, geometry_msgs::PoseWithCovarianceStamped> robot_positions;
     
     // vector to save all ros subscribers
     vector<ros::Subscriber> Subscribers;
@@ -87,13 +102,16 @@ private :
     // polygon to save the calculated formation footprint
     polygon formation_footprint;
 
+    //the circumscribed circle of the formation 
+    Circle mec;
+
     void formationFPCallback(const geometry_msgs::PolygonStamped &msg);
 
     void reconfigureCB(formation_layer_footprint::FormationLayerFootprintConfig &config, uint32_t level);
 
     /// \brief             calculate Unit Footprint in the Map frame
     /// \param position    position of the Unit
-    void getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, polygon &RobotFootprint, int index);
+    void getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, polygon &RobotFootprint);
 
     /// \brief             rasterizes line between two map coordinates into a set of cells
     /// \note              since Costmap2D::raytraceLine() is based on the size_x and since we want to rasterize polygons that might also be located outside map bounds we provide a modified raytrace
@@ -129,6 +147,9 @@ private :
     /// \param fill_polygon   if true, tue cost for the interior of the polygon will be set as well
     void setPolygonCost(costmap_2d::Costmap2D &master_grid, const polygon &polygon,
                         unsigned char cost, int min_i, int min_j, int max_i, int max_j, bool fill_polygon);
+    
+    void findminimumEnclosingCircle(polygon& points, geometry_msgs::Point center, float radius);
+    
     };
 }
 #endif
