@@ -2,7 +2,7 @@
 #define FORMATION_LAYER_Footprint_H_
 #include <formation_layer_footprint/FormationLayerFootprintConfig.h>
 #include <formation_layer_footprint/convex_hull.cpp>
-// #include <formation_layer_footprint/enclosing_circle.cpp>
+#include <formation_layer_footprint/enclosing_circle.cpp>
 #include <ros/ros.h>
 #include <costmap_2d/costmap_2d.h>
 #include <tf2_ros/transform_listener.h>
@@ -18,11 +18,19 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf/transform_datatypes.h>
 #include <geometry_msgs/Quaternion.h>
+#include <visualization_msgs/Marker.h>
 #include <vector>
 #include <string>
 #include <iostream>
 #include <functional>
 #include <map>
+
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <fpp_msgs/DynReconfigure.h>
+#include <fpp_msgs/FormationFootprintInfo.h>
+#include <dynamic_reconfigure/DoubleParameter.h>
+#include <dynamic_reconfigure/Config.h>
+#include <dynamic_reconfigure/client.h>
 
 using namespace std;
 using polygon = vector<geometry_msgs::Point>;
@@ -33,12 +41,6 @@ struct PointInt {
     int x;
     int y;
 };
-
-struct Circle{
-    geometry_msgs::Point center;
-    float radius;
-};
-
 
 class FormationLayerFootprint : public costmap_2d::Layer
 {
@@ -65,7 +67,12 @@ private :
 
     //formation footprint publisher
     ros::Publisher formationFPPub;
-    ros::Publisher  footprintsPub;
+    ros::Publisher footprintsPub;
+    ros::Publisher emcPub;
+    ros::Publisher boundingBoxPub;
+
+    //updateBounds publisher
+    ros::Publisher updateBoundsPub;
     
     dynamic_reconfigure::Server<formation_layer_footprint::FormationLayerFootprintConfig> *dsrv_;
 
@@ -90,8 +97,8 @@ private :
     // polygon to save a single footprint
     polygon footprint;
 
-    // polygon to save all footprints
-    std::vector<polygon> footprints;
+    // map to save all footprints
+    map<std::string, polygon> footprints;
 
     // polygon to save all footprints points
     polygon footprint_points;
@@ -102,6 +109,18 @@ private :
     // polygon to save the calculated formation footprint
     polygon formation_footprint;
 
+    //vector to save the previous footprints
+    vector<polygon> previous_footprints;
+
+    //polygon to save the updateBounds points
+    polygon update_bounds;
+
+    //polygon to save the bounding box of the formation footprint
+    polygon bounding_box;
+
+    //vector of Point to save the formation footprint points for mec calculation
+    vector<Point> formation_fp_points;
+    
     //the circumscribed circle of the formation 
     Circle mec;
 
@@ -148,7 +167,9 @@ private :
     void setPolygonCost(costmap_2d::Costmap2D &master_grid, const polygon &polygon,
                         unsigned char cost, int min_i, int min_j, int max_i, int max_j, bool fill_polygon);
     
-    void findminimumEnclosingCircle(polygon& points, geometry_msgs::Point center, float radius);
+    void modifyInflationRadius(double radius);
+
+    polygon boundingbox(polygon &footprint);
     
     };
 }

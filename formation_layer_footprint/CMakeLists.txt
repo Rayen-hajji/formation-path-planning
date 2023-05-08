@@ -16,12 +16,17 @@ nav_msgs
 roscpp
 rospy
 pluginlib
+fpp_msgs
+# cv_bridge
+# opencv2
 )
+
+# find_package(OpenCV REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
-
+# set(opencv2_DIR /usr/share/OpenCV/)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -115,6 +120,10 @@ catkin_package(
     roscpp
     rospy
     pluginlib
+    # opencv2
+    cv_bridge
+    fpp_msgs
+
 #  DEPENDS system_lib
 )
 
@@ -127,8 +136,10 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  # ${OpenCV_INCLUDE_DIRS}
 )
 include_directories(${catkin_INCLUDE_DIRS} include)
+
 ## Declare a C++ library
 add_library(formation_layer_footprint src/formation_layer_footprint.cpp)
 
@@ -154,9 +165,13 @@ add_library(formation_layer_footprint src/formation_layer_footprint.cpp)
 add_dependencies(formation_layer_footprint ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
+
+# target_link_libraries(formation_layer_footprint_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
 
 #############
 ## Install ##
