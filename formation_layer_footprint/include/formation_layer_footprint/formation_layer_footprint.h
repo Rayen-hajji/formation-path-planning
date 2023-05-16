@@ -31,6 +31,7 @@
 #include <dynamic_reconfigure/DoubleParameter.h>
 #include <dynamic_reconfigure/Config.h>
 #include <dynamic_reconfigure/client.h>
+#include <visualization_msgs/MarkerArray.h>
 
 using namespace std;
 using polygon = vector<geometry_msgs::Point>;
@@ -70,6 +71,8 @@ private :
     ros::Publisher footprintsPub;
     ros::Publisher emcPub;
     ros::Publisher boundingBoxPub;
+
+    ros::Publisher markerPub;
 
     //updateBounds publisher
     ros::Publisher updateBoundsPub;
@@ -123,6 +126,9 @@ private :
     
     //the circumscribed circle of the formation 
     Circle mec;
+
+    //only for testing
+    vector<PointInt> cells;
 
     void formationFPCallback(const geometry_msgs::PolygonStamped &msg);
 
