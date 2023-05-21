@@ -15,6 +15,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <std_msgs/Float64.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf/transform_datatypes.h>
 #include <geometry_msgs/Quaternion.h>
@@ -71,6 +72,7 @@ private :
     ros::Publisher footprintsPub;
     ros::Publisher emcPub;
     ros::Publisher boundingBoxPub;
+    ros::Publisher InflationRadiusPub;
 
     ros::Publisher markerPub;
 

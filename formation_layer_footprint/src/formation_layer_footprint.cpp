@@ -28,8 +28,8 @@ namespace formation_layer_footprint_namespace
         updateBoundsPub = this->nh_.advertise<geometry_msgs::PolygonStamped>("update_bounds",10,true);
         emcPub = this->nh_.advertise<visualization_msgs::Marker>("minimum_enclosing_ircle",10,true);
         boundingBoxPub = this->nh_.advertise<geometry_msgs::PolygonStamped>("bounding_box",10,true);
-        //for testing
-        markerPub = this->nh_.advertise<visualization_msgs::MarkerArray>("cell_markers", 10, true);
+        InflationRadiusPub = this->nh_.advertise<std_msgs::Float64>("inflation_radius",10,true);
+        markerPub = this->nh_.advertise<visualization_msgs::MarkerArray>("footprint_points_markers", 10, true);         //for testing
 
 
         //get the number of robots from the launch file
@@ -43,6 +43,7 @@ namespace formation_layer_footprint_namespace
 
                 //position topic
                 std::string topic_name = "/robot" + std::to_string(i) + "/amcl_pose";
+                
                 ROS_INFO("topic %d created : %s",i,topic_name.c_str());
 
                 //robot ID
@@ -69,11 +70,8 @@ namespace formation_layer_footprint_namespace
 
         dsrv_ = NULL;
         setupDynamicReconfigure(nh_);
-        ROS_INFO("FormationLayerFootprint::onInitialize END");
 
-        ros::ServiceClient dyn_reconfig_inflation_client_ = this->nh_.serviceClient<dynamic_reconfigure::Reconfigure>("/robot0/move_base_flex/global_costmap/inflation/set_parameters");
-        ros::ServiceClient formation_info_client_ = this->nh_.serviceClient<fpp_msgs::FormationFootprintInfo>("/robot0/move_base_flex/footprint_info");
-        formation_info_client_.waitForExistence();
+        ROS_INFO("FormationLayerFootprint::onInitialize END");        
     }
 
     void FormationLayerFootprint::setupDynamicReconfigure(ros::NodeHandle& nh_){
@@ -246,7 +244,8 @@ namespace formation_layer_footprint_namespace
         if(!enabled_)
             return;
         
-        if(robot_positions.size() == robots_number){
+        // if(robot_positions.size() == robots_number){
+        if(!robot_positions.empty()){ 
             this->footprint_points = vector<geometry_msgs::Point>();
             this->formation_fp_points = vector<Point>();
             ROS_INFO("UC:UpdateCosts started");
@@ -269,7 +268,6 @@ namespace formation_layer_footprint_namespace
                 geometry_msgs::PolygonStamped footprints_msg;
                 footprints_msg.header.frame_id = "map";
                 footprints_msg.header.stamp = ros::Time::now();
-                // for(const auto& point : this->footprint){
                 for(const auto& point : footprints[robot_id]){
                     geometry_msgs::Point32 p;
                     p.x = point.x;
@@ -282,6 +280,31 @@ namespace formation_layer_footprint_namespace
 
             for(int i=0; i < this->footprint_points.size(); i++)
                 ROS_INFO("UC: footprint_points[%d] = (%f,%f)",i,this->footprint_points[i].x,this->footprint_points[i].y);
+
+            //for testing: publish the footprint points as Markers
+            visualization_msgs::MarkerArray marker_array;
+            for (unsigned int i = 0; i < this->footprint_points.size(); ++i) {
+                // Create a marker for each point
+                visualization_msgs::Marker marker;
+                marker.header.frame_id = "map";  // Set the frame ID of the markers
+                marker.header.stamp = ros::Time::now();
+                marker.ns = "point_markers";
+                marker.id = i;
+                marker.type = visualization_msgs::Marker::SPHERE;
+                marker.action = visualization_msgs::Marker::ADD;
+                marker.pose.position = this->footprint_points[i];  // Set the position of the marker based on the point coordinates
+                marker.scale.x = 0.1;  // Set the size of the marker
+                marker.scale.y = 0.1;
+                marker.scale.z = 0.1;
+                marker.color.r = 1.0;  // Set the color of the marker
+                marker.color.g = 0.0;
+                marker.color.b = 0.0;
+                marker.color.a = 1.0;  // Set the alpha (transparency) of the marker
+
+                // Add the marker to the marker array
+                marker_array.markers.push_back(marker);
+            }
+            this->markerPub.publish(marker_array);
             
             //create the formation footprint from the footprints points
             this->formation_footprint = findConvexHull(this->footprint_points, this->footprint_points.size());
@@ -295,10 +318,11 @@ namespace formation_layer_footprint_namespace
             }
 
             //get the minimum enclosing circle
-            ROS_INFO("calculate the mec");
             this->mec = welzl(formation_fp_points);
-            ROS_INFO("mec center is (%f,%f) ",mec.C.X,mec.C.Y);
-            ROS_INFO("mec radius is %f ",mec.R);
+            std_msgs::Float64 mecR_msg;
+            mecR_msg.data = mec.R;
+            this->InflationRadiusPub.publish(mecR_msg);
+
 
 
             //publish the formaiton minimum ecnlosing circle
@@ -338,13 +362,11 @@ namespace formation_layer_footprint_namespace
             formationFPPub.publish(formation_footprint_msg);
             this->bounding_box = vector<geometry_msgs::Point>();
             this->bounding_box = boundingbox(formation_footprint);
-            *min_x = bounding_box[2].x + 0.0; //original without +
-            *min_y = bounding_box[2].y + 0.0;
-            *max_x = bounding_box[0].x + 0.0;
-            *max_y = bounding_box[0].y + 0.0;
 
-            ROS_INFO("minX = (%f%f)",*min_x,*min_y);
-            ROS_INFO("maxX = (%f%f)",*max_x,*max_y);
+            *min_x = bounding_box[2].x-20.0; 
+            *min_y = bounding_box[2].y-20.0;
+            *max_x = bounding_box[0].x+20.0;
+            *max_y = bounding_box[0].y+20.0;
 
             //publish the bouding box to visualize
             geometry_msgs::PolygonStamped boundingBoxMsg;
@@ -359,13 +381,6 @@ namespace formation_layer_footprint_namespace
             }
             boundingBoxPub.publish(boundingBoxMsg);
         }
-        //set the inflation radius of the robot0 costmap
-            // int i = 0;
-            // if((this->mec.R=!0)&&(i==0)){
-            //     ROS_INFO("set inflation radius from updateBounds");
-            //     modifyInflationRadius(mec.R);
-            //     i++;
-            // }
     }
         
     void FormationLayerFootprint::setPolygonCost(costmap_2d::Costmap2D &master_grid, const polygon &polygon,
@@ -388,14 +403,14 @@ namespace formation_layer_footprint_namespace
         for (unsigned int i = 0; i < polygon_cells.size(); ++i) {  
             int mx = polygon_cells[i].x;
             int my = polygon_cells[i].y;
-            // check if point is outside bounds
+            //check if point is outside bounds
             if (mx < min_i || mx >= max_i)
                 continue;
             if (my < min_j || my >= max_j)
                 continue;
             master_grid.setCost(mx, my, cost);
         }
-    } 
+    }     
 
     void FormationLayerFootprint::getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, polygon &RobotFootprint){
         ROS_INFO("getUnitFootprint started");
@@ -448,26 +463,14 @@ namespace formation_layer_footprint_namespace
                 string robot_id = "robot_" + to_string(i);
                 setPolygonCost(master_grid, this->footprints[robot_id], FREE_SPACE, min_i, min_j, max_i, max_j, true);
 
-                // setPolygonCost(master_grid, this->formation_footprint, FREE_SPACE, min_i, min_j, max_i, max_j, true, this->cells);
-
-                //save all footprints here
-                this->previous_footprints.push_back(footprints[robot_id]);
-
+                // save all footprints here
+                // this->previous_footprints.push_back(footprints[robot_id]);
                 // for(int i=0 ; i < previous_footprints.size(); i++){
                 //     setPolygonCost(master_grid, this->previous_footprints[i], FREE_SPACE, min_i, min_j, max_i, max_j, true);
                 // }
+                // if(this->previous_footprints.size()>300)
+                //     this->previous_footprints.erase(this->previous_footprints.begin(),this->previous_footprints.end());
 
-                //clear the traces of the previous footprints
-                // ROS_INFO("to start clearing, previous_footprints.size() = %ld",this->previous_footprints.size());
-                // if(this->previous_footprints.size() > 50*robots_number){
-                //     for(int i = 0 ; i < this->previous_footprints.size() ; i++){
-                //         setPolygonCost(master_grid, this->previous_footprints[i], FREE_SPACE, min_i, min_j, max_i, max_j, true);
-                //     }
-                //     // this->previous_footprints.erase(this->previous_footprints.begin(),this->previous_footprints.begin()+10*robots_number);
-                // }
-                //make it later depend on the robots number
-                // if(this->previous_footprints.size()>500)
-                //     this->previous_footprints.erase(this->previous_footprints.begin(),this->previous_footprints.begin()+100);
             }
         }
     }
