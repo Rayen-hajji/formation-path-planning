@@ -12,6 +12,9 @@ namespace formation_layer_footprint_namespace
     
     void FormationLayerFootprint::onInitialize()
     {
+
+        this->master_grids = vector<costmap_2d::Costmap2D>(); //for testing
+
         ROS_INFO("FormationLayerFootprint::onInitialize");
         this->nh_ = ros::NodeHandle("~/"+ name_);
 
@@ -20,16 +23,21 @@ namespace formation_layer_footprint_namespace
         
         //initialize the previous_footprints vector
         this->previous_footprints = vector<polygon>();
-        
+
         //subscribe to the formation footprint topic
-        formationFPSubs = this->nh_.subscribe("/robot0/move_base_flex/formation_footprint",10, &FormationLayerFootprint::formationFPCallback, this);
+        laserSub = this->nh_.subscribe("/robot2/scan",10,&FormationLayerFootprint::laserCallback, this); //for testing
         //publishers
         footprintsPub = this->nh_.advertise<geometry_msgs::PolygonStamped>("all_footprints",10,true);
         updateBoundsPub = this->nh_.advertise<geometry_msgs::PolygonStamped>("update_bounds",10,true);
-        emcPub = this->nh_.advertise<visualization_msgs::Marker>("minimum_enclosing_ircle",10,true);
+        mecPub = this->nh_.advertise<visualization_msgs::Marker>("minimum_enclosing_circle",10,true);
+        mecCenterPub = this->nh_.advertise<geometry_msgs::PointStamped>("minimum_enclosing_circle_center",10,true);
         boundingBoxPub = this->nh_.advertise<geometry_msgs::PolygonStamped>("bounding_box",10,true);
         InflationRadiusPub = this->nh_.advertise<std_msgs::Float64>("inflation_radius",10,true);
-        markerPub = this->nh_.advertise<visualization_msgs::MarkerArray>("footprint_points_markers", 10, true);         //for testing
+        markerPub = this->nh_.advertise<visualization_msgs::MarkerArray>("footprint_points_markers", 10, true);  //for testing
+        leftPointsPub = this->nh_.advertise<visualization_msgs::MarkerArray>("left_points_markers", 10, true);  //for testing
+        obstaclesPub = this->nh_.advertise<visualization_msgs::MarkerArray>("obstacle_points_markers", 10, true); //for testing
+        mec2Pub = this->nh_.advertise<visualization_msgs::Marker>("minimum_enclosing_circle_2",10,true); // for testing
+        mcCenter2Pub = this->nh_.advertise<geometry_msgs::PointStamped>("minimum_enclosing_circle_center_2",10,true); //for Testing
 
 
         //get the number of robots from the launch file
@@ -44,7 +52,7 @@ namespace formation_layer_footprint_namespace
                 //position topic
                 std::string topic_name = "/robot" + std::to_string(i) + "/amcl_pose";
                 
-                ROS_INFO("topic %d created : %s",i,topic_name.c_str());
+                // ROS_INFO("topic %d created : %s",i,topic_name.c_str());
 
                 //robot ID
                 string robot_id = "robot_" + to_string(i);
@@ -59,9 +67,9 @@ namespace formation_layer_footprint_namespace
                 Subscribers.push_back(this->nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>(topic_name, 10, callbacks[i]));
 
                 //only for testing
-                ROS_INFO("Topic %d is %s", i, Subscribers[i].getTopic().c_str());
-                if(i == robots_number-1)
-                    ROS_INFO("all Subscribers are created");
+                // ROS_INFO("Topic %d is %s", i, Subscribers[i].getTopic().c_str());
+                if(i == robots_number-1){}
+                    // ROS_INFO("all Subscribers are created");
                 else ROS_INFO("Was in Loop");
             }
         }
@@ -71,7 +79,7 @@ namespace formation_layer_footprint_namespace
         dsrv_ = NULL;
         setupDynamicReconfigure(nh_);
 
-        ROS_INFO("FormationLayerFootprint::onInitialize END");        
+        ROS_INFO("FormationLayerFootprint::onInitialize END");      
     }
 
     void FormationLayerFootprint::setupDynamicReconfigure(ros::NodeHandle& nh_){
@@ -90,17 +98,17 @@ namespace formation_layer_footprint_namespace
         enabled_ = config.enabled;
     }
 
-    void FormationLayerFootprint::formationFPCallback(const geometry_msgs::PolygonStamped &msg)
-    {
-        formation_fp.clear();
-        for(const auto& point : msg.polygon.points){
-            geometry_msgs::Point p;
-            p.x = point.x;
-            p.y = point.y;
-            p.z = 0;
-            formation_fp.push_back(p);     
+    void FormationLayerFootprint::laserCallback(const sensor_msgs::LaserScan &msg){
+        this->laser_data.angle_max = msg.angle_max;
+        this->laser_data.angle_min = msg.angle_min;
+        this->laser_data.angle_increment = msg.angle_increment;
+        this->laser_data.ranges = vector<double>();
+        this->laser_frame = msg.header.frame_id; 
+        for(const auto& distance : msg.ranges){
+            this->laser_data.ranges.push_back(distance); 
         }
-    }      
+        // ROS_INFO("size of ranges is :%ld",laser_data.ranges.size());
+     }     
 
     void FormationLayerFootprint::linetrace(int x0, int y0, int x1, int y1, std::vector<PointInt> &cells)
     {
@@ -278,9 +286,9 @@ namespace formation_layer_footprint_namespace
                 this->footprintsPub.publish(footprints_msg);
             }
 
-            for(int i=0; i < this->footprint_points.size(); i++)
-                ROS_INFO("UC: footprint_points[%d] = (%f,%f)",i,this->footprint_points[i].x,this->footprint_points[i].y);
-
+            for(int i=0; i < this->footprint_points.size(); i++){
+                // ROS_INFO("UC: footprint_points[%d] = (%f,%f)",i,this->footprint_points[i].x,this->footprint_points[i].y);
+            }
             //for testing: publish the footprint points as Markers
             visualization_msgs::MarkerArray marker_array;
             for (unsigned int i = 0; i < this->footprint_points.size(); ++i) {
@@ -319,11 +327,18 @@ namespace formation_layer_footprint_namespace
 
             //get the minimum enclosing circle
             this->mec = welzl(formation_fp_points);
-            std_msgs::Float64 mecR_msg;
-            mecR_msg.data = mec.R;
-            this->InflationRadiusPub.publish(mecR_msg);
+            geometry_msgs::PointStamped mecC_msg;
+            mecC_msg.header.frame_id = "map";
+            mecC_msg.point.x = mec.C.X;
+            mecC_msg.point.y = mec.C.Y;
+            mecC_msg.point.z = 0.0;
+            this->mecCenterPub.publish(mecC_msg);
+            reconfigureInflationRadius(mec.R);
 
-
+            //publish the circle information as service
+            if(!mecService){
+                    this->mecService = this->nh_.advertiseService("mec_Info", &FormationLayerFootprint::mecInfoServiceCallback, this);
+            }
 
             //publish the formaiton minimum ecnlosing circle
             visualization_msgs::Marker marker;
@@ -344,11 +359,10 @@ namespace formation_layer_footprint_namespace
             marker.color.r = 1.0;
             marker.color.g = 0.0;
             marker.color.b = 0.0;
-            emcPub.publish(marker);
-
+            mecPub.publish(marker);
 
             //publish formation footprint
-            formationFPPub = this->nh_.advertise<geometry_msgs::PolygonStamped>("Layer_formation_footprint", 10, true);
+            formationFPPub = this->nh_.advertise<geometry_msgs::PolygonStamped>("formation_footprint", 10, true);
             geometry_msgs::PolygonStamped formation_footprint_msg;
             formation_footprint_msg.header.frame_id = "map";
             formation_footprint_msg.header.stamp = ros::Time::now();
@@ -360,9 +374,10 @@ namespace formation_layer_footprint_namespace
                 formation_footprint_msg.polygon.points.push_back(p);
             }
             formationFPPub.publish(formation_footprint_msg);
+
+            //get the BoundingBox of the formation footprint
             this->bounding_box = vector<geometry_msgs::Point>();
             this->bounding_box = boundingbox(formation_footprint);
-
             *min_x = bounding_box[2].x-20.0; 
             *min_y = bounding_box[2].y-20.0;
             *max_x = bounding_box[0].x+20.0;
@@ -413,7 +428,7 @@ namespace formation_layer_footprint_namespace
     }     
 
     void FormationLayerFootprint::getUnitFootprint(const geometry_msgs::PoseWithCovarianceStamped &position, polygon &RobotFootprint){
-        ROS_INFO("getUnitFootprint started");
+        // ROS_INFO("getUnitFootprint started");
         geometry_msgs::PolygonStamped RobotFootprintStamped;
         //get yaw 
         geometry_msgs::Quaternion orientation = position.pose.pose.orientation;
@@ -422,7 +437,7 @@ namespace formation_layer_footprint_namespace
         //build the oriented footprint 
         costmap_2d::transformFootprint(position.pose.pose.position.x, position.pose.pose.position.y,
                         yaw, getFootprint(), RobotFootprintStamped );
-        ROS_INFO("position is (%f,%f,%f)",position.pose.pose.position.x,position.pose.pose.position.y,position.pose.pose.orientation.z);
+        // ROS_INFO("position is (%f,%f,%f)",position.pose.pose.position.x,position.pose.pose.position.y,position.pose.pose.orientation.z);
         RobotFootprint.clear();
         for(const auto& point : RobotFootprintStamped.polygon.points){
             geometry_msgs::Point p;
@@ -433,7 +448,7 @@ namespace formation_layer_footprint_namespace
         }
     }    
 
-    void FormationLayerFootprint::modifyInflationRadius(double radius){
+    void FormationLayerFootprint::reconfigureInflationRadius(double radius){
         fpp_msgs::DynReconfigure::Request req;
         req.new_inflation_radius = radius;
         req.robot_namespace = "/robot0";
@@ -451,18 +466,34 @@ namespace formation_layer_footprint_namespace
                             dyn_reconfigure_inflation_msg.response);
     }
 
-    
+    bool FormationLayerFootprint::mecInfoServiceCallback(fpp_msgs::FormationFootprintInfo::Request &req, fpp_msgs::FormationFootprintInfo::Response &res){
+        res.formation_centre.x = this->mec.C.X;
+        res.formation_centre.y = this->mec.C.Y;
+        res.formation_centre.theta = 0.0;
+        res.minimal_encloring_circle_radius = this->mec.R;
+        return true;
+    }
+
     void FormationLayerFootprint::updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j)
     {
         if(!enabled_)
             return;
+        
+        ROS_INFO("updateCost started");
+
+        //for testing 
+        // this->obstacle_map = vector<geometry_msgs::Point>();
+        // this->flag = false;
+        // int cols = master_grid.getSizeInCellsY();
+        // int rows = master_grid.getSizeInCellsX();
+        // this->origin_x =  master_grid.getOriginX();
+        // this->origin_y =  master_grid.getOriginY();
+        // this->resolution = master_grid.getResolution();
 
         if(this->footprints.size() == robots_number){
-            this->cells = vector<PointInt> ();
             for(int i = 0 ; i < robots_number; i++){
                 string robot_id = "robot_" + to_string(i);
                 setPolygonCost(master_grid, this->footprints[robot_id], FREE_SPACE, min_i, min_j, max_i, max_j, true);
-
                 // save all footprints here
                 // this->previous_footprints.push_back(footprints[robot_id]);
                 // for(int i=0 ; i < previous_footprints.size(); i++){
@@ -470,8 +501,99 @@ namespace formation_layer_footprint_namespace
                 // }
                 // if(this->previous_footprints.size()>300)
                 //     this->previous_footprints.erase(this->previous_footprints.begin(),this->previous_footprints.end());
-
             }
+
+        //     this->cells = vector<PointInt> ();
+        //     master_grids.push_back(master_grid);
+        //     ROS_INFO("master_grids size is %ld",master_grids.size());  
+        //     if(master_grids.size()>1){
+        //         //get the laser points
+        //         this->obstacles = vector<geometry_msgs::Point>();
+        //         for(int i= 0; i < this->laser_data.ranges.size(); ++i){
+        //             double angle = i * this->laser_data.angle_increment + this->laser_data.angle_min;
+        //             geometry_msgs::Point point;
+        //             point.x = this->laser_data.ranges[i] * cos(angle);
+        //             point.y = this->laser_data.ranges[i] * sin(angle);
+        //             point.z = 0;
+        //             obstacles.push_back(point);
+        //         }
+        //         if(!this->obstacles.empty()){
+        //             //transformation 
+        //             ROS_INFO("transformation started");
+        //             tf2_ros::Buffer tfBuffer;
+        //             tf2_ros::TransformListener tfListener(tfBuffer);
+        //             geometry_msgs::TransformStamped transformStamped;
+        //             // this->obstacle_map = vector<geometry_msgs::Point>();
+        //             try{
+        //                 transformStamped = tfBuffer.lookupTransform("map",this->laser_frame,ros::Time(0), ros::Duration(1.0));
+        //                 for(int i = 0; i < this->obstacles.size(); ++i){
+        //                     geometry_msgs::Point map_point;
+        //                     tf2::doTransform(this->obstacles[i],map_point,transformStamped);
+        //                     this->obstacle_map.push_back(map_point);
+        //                 }
+        //             }
+        //             catch (tf2::TransformException& ex) {
+        //                 ROS_ERROR("Failed to perform transformation: %s", ex.what());
+        //             }
+        //         }
+        //         //get the changing points from grid to grid
+        //         for(int i = 0; i < cols; ++i){
+        //             for(int j = 0; j < rows; ++j){
+        //                 if(master_grids[0].getCost(i,j) != master_grids[1].getCost(i,j)){
+        //                     PointInt different_cell;
+        //                     different_cell.x = i;
+        //                     different_cell.y = j;
+        //                     this->cells.push_back(different_cell);
+        //                 }
+        //             }
+        //         }
+        //         if(!cells.empty()){
+        //             for(int i = 0; i <this->cells.size(); ++i){
+        //                 geometry_msgs::Point leftPoint;
+        //                 leftPoint.x = this->origin_x + (this->cells[i].x + 0.5) * this->resolution;
+        //                 leftPoint.y = this->origin_y + (this->cells[i].y + 0.5) * this->resolution;
+        //                 if((leftPoint.x<this->bounding_box[0].x)&&(leftPoint.x>this->bounding_box[2].x)&&(leftPoint.y<this->bounding_box[0].y)&&(leftPoint.y>this->bounding_box[2].y)){
+        //                     ROS_INFO(" left cell in (%f,%f)",leftPoint.x,leftPoint.y);
+        //                     this->flag = true;
+        //                 }
+        //                 if (this->flag)
+        //                 break;
+        //             }
+        //         }
+
+        //         //publish the laser points when change occured 
+        //         if(this->flag){   
+        //             visualization_msgs::MarkerArray obstacles_marker_array;
+        //             for (unsigned int i = 0; i < this->obstacle_map.size(); ++i){
+        //                 if((obstacle_map[i].x<this->bounding_box[0].x+5)&&(obstacle_map[i].x>this->bounding_box[2].x-5)&&(obstacle_map[i].y<this->bounding_box[0].y+5)&&(obstacle_map[i].y>this->bounding_box[2].y-5)){
+        //                     // if(true){    
+        //                         // Create a marker for each point
+        //                         visualization_msgs::Marker marker;
+        //                         marker.header.frame_id = "map";  // Set the frame ID of the markers
+        //                         marker.header.stamp = ros::Time::now();
+        //                         marker.ns = "obstacles_markers";
+        //                         marker.id = i;
+        //                         marker.type = visualization_msgs::Marker::SPHERE;
+        //                         marker.action = visualization_msgs::Marker::ADD;
+        //                         marker.pose.position = this->obstacle_map[i];  // Set the position of the marker based on the point coordinates
+        //                         marker.scale.x = 0.1;  // Set the size of the marker
+        //                         marker.scale.y = 0.1;
+        //                         marker.scale.z = 0.1;
+        //                         marker.color.r = 1.0;  // Set the color of the marker
+        //                         marker.color.g = 0.0;
+        //                         marker.color.b = 0.0;
+        //                         marker.color.a = 1.0;  // Set the alpha (transparency) of the marker
+        //                         // Add the marker to the marker array
+        //                         obstacles_marker_array.markers.push_back(marker);
+        //                 }
+        //             }
+        //             this->obstaclesPub.publish(obstacles_marker_array);
+        //             obstacles_marker_array.markers.clear();
+        //         }
+        //         master_grids.erase(master_grids.begin());
+        //     }
         }
+        ROS_INFO("updateCost done");
     }
-}//end_namespace                                                                   
+}//end_namespace 
+            

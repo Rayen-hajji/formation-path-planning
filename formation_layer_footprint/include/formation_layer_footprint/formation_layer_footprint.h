@@ -15,6 +15,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <sensor_msgs/LaserScan.h>
 #include <std_msgs/Float64.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf/transform_datatypes.h>
@@ -25,7 +26,7 @@
 #include <iostream>
 #include <functional>
 #include <map>
-
+#include <cmath>
 #include <dynamic_reconfigure/Reconfigure.h>
 #include <fpp_msgs/DynReconfigure.h>
 #include <fpp_msgs/FormationFootprintInfo.h>
@@ -42,6 +43,13 @@ namespace formation_layer_footprint_namespace
 struct PointInt {
     int x;
     int y;
+};
+
+struct sensor_msg {
+    double angle_min;
+    double angle_max;
+    double angle_increment;
+    vector<double> ranges;
 };
 
 class FormationLayerFootprint : public costmap_2d::Layer
@@ -70,14 +78,18 @@ private :
     //formation footprint publisher
     ros::Publisher formationFPPub;
     ros::Publisher footprintsPub;
-    ros::Publisher emcPub;
+    ros::Publisher mecPub;
     ros::Publisher boundingBoxPub;
     ros::Publisher InflationRadiusPub;
-
+    ros::Publisher mecCenterPub;
     ros::Publisher markerPub;
+    ros::Publisher obstaclesPub;
 
     //updateBounds publisher
     ros::Publisher updateBoundsPub;
+
+    //servers
+    ros::ServiceServer mecService;
     
     dynamic_reconfigure::Server<formation_layer_footprint::FormationLayerFootprintConfig> *dsrv_;
 
@@ -89,6 +101,8 @@ private :
 
     //variable to save the number of robots used in the formation 
     int robots_number;
+
+    bool reconfigure_flag = true;
 
     // vector to save all units positions
     vector<geometry_msgs::PoseWithCovarianceStamped> robot_poses;
@@ -132,6 +146,24 @@ private :
     //only for testing
     vector<PointInt> cells;
 
+
+    // Testing variables
+    // costmap_2d::Costmap2D& old_master_grid;
+    vector<costmap_2d::Costmap2D> master_grids;
+    ros::Publisher leftPointsPub;
+    ros::Subscriber laserSub;
+    ros::Publisher pointMarkerPub;
+    polygon leftPoints;
+    double origin_x, origin_y, resolution;
+    bool flag;
+    sensor_msg laser_data;
+    polygon obstacles;
+    polygon obstacle_map;
+    string laser_frame;
+    ros::Publisher mec2Pub;
+    ros::Publisher mcCenter2Pub;
+    void laserCallback(const sensor_msgs::LaserScan &msg);
+
     void formationFPCallback(const geometry_msgs::PolygonStamped &msg);
 
     void reconfigureCB(formation_layer_footprint::FormationLayerFootprintConfig &config, uint32_t level);
@@ -174,8 +206,13 @@ private :
     /// \param fill_polygon   if true, tue cost for the interior of the polygon will be set as well
     void setPolygonCost(costmap_2d::Costmap2D &master_grid, const polygon &polygon,
                         unsigned char cost, int min_i, int min_j, int max_i, int max_j, bool fill_polygon);
-    
-    void modifyInflationRadius(double radius);
+
+    /// @brief          dynamic reconfigure the inflation radius
+    /// @param radius   radius of the inflation area 
+    void reconfigureInflationRadius(double radius);
+
+    /// @brief          Callback function for mecService
+    bool mecInfoServiceCallback(fpp_msgs::FormationFootprintInfo::Request &req, fpp_msgs::FormationFootprintInfo::Response &res);
 
     polygon boundingbox(polygon &footprint);
     
