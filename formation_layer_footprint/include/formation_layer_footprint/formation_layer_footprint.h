@@ -103,6 +103,7 @@ private :
     int robots_number;
 
     bool reconfigure_flag = true;
+    bool service_flag = true;
 
     // vector to save all units positions
     vector<geometry_msgs::PoseWithCovarianceStamped> robot_poses;

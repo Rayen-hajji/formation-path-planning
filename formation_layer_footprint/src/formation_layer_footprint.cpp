@@ -15,12 +15,15 @@ namespace formation_layer_footprint_namespace
 
         this->master_grids = vector<costmap_2d::Costmap2D>(); //for testing
 
-        ROS_INFO("FormationLayerFootprint::onInitialize");
+        ROS_INFO("Global costmap using formation_layer_footprint plugin");
         this->nh_ = ros::NodeHandle("~/"+ name_);
 
         FormationLayerFootprint::matchSize();
         current_= true;
-        
+
+        //initialize the service flag
+        this->service_flag = true;
+
         //initialize the previous_footprints vector
         this->previous_footprints = vector<polygon>();
 
@@ -38,6 +41,11 @@ namespace formation_layer_footprint_namespace
         obstaclesPub = this->nh_.advertise<visualization_msgs::MarkerArray>("obstacle_points_markers", 10, true); //for testing
         mec2Pub = this->nh_.advertise<visualization_msgs::Marker>("minimum_enclosing_circle_2",10,true); // for testing
         mcCenter2Pub = this->nh_.advertise<geometry_msgs::PointStamped>("minimum_enclosing_circle_center_2",10,true); //for Testing
+
+        if(this->service_flag){
+            this->mecService = this->nh_.advertiseService("mec_Info", &FormationLayerFootprint::mecInfoServiceCallback, this);
+            this->service_flag = false;
+        }
 
 
         //get the number of robots from the launch file
@@ -333,12 +341,7 @@ namespace formation_layer_footprint_namespace
             mecC_msg.point.y = mec.C.Y;
             mecC_msg.point.z = 0.0;
             this->mecCenterPub.publish(mecC_msg);
-            reconfigureInflationRadius(mec.R);
-
-            //publish the circle information as service
-            if(!mecService){
-                    this->mecService = this->nh_.advertiseService("mec_Info", &FormationLayerFootprint::mecInfoServiceCallback, this);
-            }
+            reconfigureInflationRadius(mec.R * 1.5);
 
             //publish the formaiton minimum ecnlosing circle
             visualization_msgs::Marker marker;
@@ -378,10 +381,10 @@ namespace formation_layer_footprint_namespace
             //get the BoundingBox of the formation footprint
             this->bounding_box = vector<geometry_msgs::Point>();
             this->bounding_box = boundingbox(formation_footprint);
-            *min_x = bounding_box[2].x-20.0; 
-            *min_y = bounding_box[2].y-20.0;
-            *max_x = bounding_box[0].x+20.0;
-            *max_y = bounding_box[0].y+20.0;
+            *min_x = bounding_box[2].x; 
+            *min_y = bounding_box[2].y;
+            *max_x = bounding_box[0].x;
+            *max_y = bounding_box[0].y;
 
             //publish the bouding box to visualize
             geometry_msgs::PolygonStamped boundingBoxMsg;
@@ -457,7 +460,7 @@ namespace formation_layer_footprint_namespace
         dynamic_reconfigure::DoubleParameter inflation_reconfig;
         inflation_reconfig.name = "inflation_radius";
         inflation_reconfig.value = req.new_inflation_radius;
-        ROS_INFO_STREAM("New inflation radius: " << req.new_inflation_radius);
+        ROS_INFO_STREAM("New inflation radius reconfigured from formation Layer: " << req.new_inflation_radius);
         dyn_reconfigure_inflation_msg.request.config.doubles.push_back(inflation_reconfig);
         
         ROS_INFO_STREAM(req.robot_namespace << "/move_base_flex/global_costmap/inflation/set_parameters");
