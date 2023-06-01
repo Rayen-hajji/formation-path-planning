@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Grid1/Offset1
         - /Global Map - Robot11/Costmap1
-        - /layer_formation_footprint1
       Splitter Ratio: 0.5736514329910278
     Tree Height: 904
   - Class: rviz/Selection
@@ -456,7 +455,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 255; 170; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: Amcl Particle Swarm - Robot0
@@ -466,7 +465,7 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /robot0/particlecloud
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
@@ -768,7 +767,7 @@ Visualization Manager:
           Topic: /robot1/move_base_node/global_costmap/footprint
           Unreliable: false
           Value: true
-      Enabled: false
+      Enabled: true
       Name: Global Map - Robot1
     - Class: rviz/Group
       Displays:
@@ -861,7 +860,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 255; 170; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: Amcl Particle Swarm - Robot1
@@ -871,7 +870,7 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /robot1/particlecloud
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
@@ -1173,7 +1172,7 @@ Visualization Manager:
           Topic: /robot2/move_base_node/global_costmap/footprint
           Unreliable: false
           Value: true
-      Enabled: false
+      Enabled: true
       Name: Global Map - Robot2
     - Class: rviz/Group
       Displays:
@@ -1266,7 +1265,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 255; 170; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: Amcl Particle Swarm - Robot2
@@ -1276,7 +1275,7 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /robot2/particlecloud
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz/Axes
       Enabled: true
@@ -1286,15 +1285,6 @@ Visualization Manager:
       Reference Frame: map
       Show Trail: false
       Value: true
-    - Alpha: 1
-      Class: rviz/Polygon
-      Color: 32; 74; 135
-      Enabled: false
-      Name: Formation Footprint
-      Queue Size: 10
-      Topic: /robot0/move_base_flex/formation_footprint
-      Unreliable: false
-      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
@@ -1409,13 +1399,58 @@ Visualization Manager:
       Value: true
     - Alpha: 1
       Class: rviz/Polygon
-      Color: 239; 41; 41
+      Color: 32; 74; 135
       Enabled: true
-      Name: layer_formation_footprint
+      Name: Formation Footprint
       Queue Size: 10
-      Topic: /robot1/move_base_flex/global_costmap/formation_layer_footprint/Layer_formation_footprint
+      Topic: /robot0/move_base_flex/global_costmap/formation_layer/formation_footprint
       Unreliable: false
       Value: true
+    - Class: rviz/Marker
+      Enabled: false
+      Marker Topic: /robot0/move_base_flex/global_costmap/formation_layer/minimum_enclosing_circle
+      Name: circumscribed circle
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Alpha: 1
+      Class: rviz/PointStamped
+      Color: 204; 41; 204
+      Enabled: false
+      History Length: 1
+      Name: EMC center
+      Queue Size: 10
+      Radius: 0.07000000029802322
+      Topic: /robot0/move_base_flex/global_costmap/formation_layer/minimum_enclosing_circle_center
+      Unreliable: false
+      Value: false
+    - Alpha: 1
+      Class: rviz/Polygon
+      Color: 25; 255; 0
+      Enabled: true
+      Name: formation layer BoundingBox
+      Queue Size: 10
+      Topic: /robot1/move_base_flex/global_costmap/formation_layer/bounding_box
+      Unreliable: false
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /robot2/move_base_flex/global_costmap/formation_layer/obstacle_points_markers
+      Name: Laserscan points
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Class: rviz/Polygon
+      Color: 46; 52; 54
+      Enabled: false
+      Name: single footprint
+      Queue Size: 10
+      Topic: /robot1/move_base_flex/global_costmap/formation_layer/all_footprints
+      Unreliable: false
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -1447,7 +1482,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 17.23632049560547
+      Distance: 22.09107208251953
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -1455,17 +1490,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -8.308180809020996
-        Y: 6.458441257476807
-        Z: 9.44604107644409e-06
+        X: 6.589884281158447
+        Y: -4.130668640136719
+        Z: 1.135338970925659e-05
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6247968673706055
+      Pitch: 0.9047966599464417
       Target Frame: <Fixed Frame>
-      Yaw: 3.0885889530181885
+      Yaw: 5.836771011352539
     Saved: ~
 Window Geometry:
   Displays:

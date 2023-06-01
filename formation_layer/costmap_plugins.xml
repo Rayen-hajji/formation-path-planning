@@ -1,5 +1,5 @@
 <library path="lib/libformation_layer">
     <class type="formation_layer_namespace::FormationLayer" base_class_type="costmap_2d::Layer">
-        <description>Layer that free the area occupied by the formation</description>
+        <description>Layer that free the clear all units footprints</description>
     </class>
 </library>

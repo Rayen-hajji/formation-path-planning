@@ -455,7 +455,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 255; 170; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: Amcl Particle Swarm - Robot0
@@ -465,7 +465,7 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /robot0/particlecloud
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
@@ -860,7 +860,7 @@ Visualization Manager:
       Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 255; 170; 0
-      Enabled: true
+      Enabled: false
       Head Length: 0.07000000029802322
       Head Radius: 0.029999999329447746
       Name: Amcl Particle Swarm - Robot1
@@ -870,7 +870,7 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /robot1/particlecloud
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz/Axes
       Enabled: true
@@ -1007,9 +1007,26 @@ Visualization Manager:
       Enabled: true
       Name: formation layer footprint
       Queue Size: 10
-      Topic: /robot1/move_base_flex/global_costmap/formation_layer_footprint/Layer_formation_footprint
+      Topic: /robot1/move_base_flex/global_costmap/formation_layer/bounding_box
       Unreliable: false
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: false
+      Marker Topic: /robot0/move_base_flex/global_costmap/formation_layer/footprint_points_markers
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: false
+    - Alpha: 1
+      Class: rviz/Polygon
+      Color: 25; 255; 0
+      Enabled: false
+      Name: updateBounds
+      Queue Size: 10
+      Topic: /robot0/move_base_flex/global_costmap/formation_layer/bounding_box
+      Unreliable: false
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -1041,7 +1058,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 8.406038284301758
+      Distance: 49.397789001464844
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -1049,17 +1066,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -9.44448184967041
-        Y: 4.266933441162109
-        Z: 2.2934837033972144e-06
+        X: -35.731441497802734
+        Y: -11.087846755981445
+        Z: -9.5963014246081e-06
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.1597970724105835
+      Pitch: 1.0697968006134033
       Target Frame: <Fixed Frame>
-      Yaw: 3.4085824489593506
+      Yaw: 3.5817601680755615
     Saved: ~
 Window Geometry:
   Displays:

@@ -31,7 +31,9 @@ FormationPathPlanner:
       robot_pose_topic: amcl_pose 
     robot1:
       namespace: /robot1
-      offset: [0.0, -1.0] # Defines distance from master robot
+      # offset: [0.0, -2.0] # for warehouse: Defines distance from master robot
+      # offset: [0.0, -2.5] # for wide_maze
+      offset: [0.0, -2.0] # for hallway
       # reconfig_offset: [-1.0, 0.7] # Defines the distance from the master after reconfiguration
       robot_outline: [[0.506,-0.32],[0.506,0.32],[-0.454,0.32],[-0.454,-0.32]]
 

@@ -77,7 +77,9 @@ namespace fpp
         this->dyn_rec_inflation_srv_client_ = this->nh_.serviceClient<fpp_msgs::DynReconfigure>("/dyn_reconfig_inflation");
         this->dyn_rec_inflation_srv_client_.waitForExistence();
 
-		this->get_footprint_info_srv_client_ = this->nh_.serviceClient<fpp_msgs::FormationFootprintInfo>("move_base_flex/footprint_info");
+		// this->get_footprint_info_srv_client_ = this->nh_.serviceClient<fpp_msgs::FormationFootprintInfo>("move_base_flex/footprint_info");
+		this->get_footprint_info_srv_client_ = this->nh_.serviceClient<fpp_msgs::FormationFootprintInfo>("move_base_flex/global_costmap/formation_layer/mec_Info"); //changed by rayen
+		
 		this->get_footprint_info_srv_client_.waitForExistence();
 
 		// this->get_robot_plan_srv_server_ = this->nh_.advertiseService("get_robot_plan",

@@ -23,8 +23,12 @@ bool formation_footprint_info_cb(fpp_msgs::FormationFootprintInfo::Request &req,
 	res.formation_centre.y = formation_centre_world_cs[1];
 	res.formation_centre.theta = 0.0;
 
+	ROS_INFO("from formation node : center=(%f,%f)",formation_centre_world_cs[0],formation_centre_world_cs[1]);
+
 	// Minimal enclosing circle
 	res.minimal_encloring_circle_radius = formation_footprint->calcMinimalEnclosingCircleRadius();
+
+	ROS_INFO("from formation node : radius= %f",res.minimal_encloring_circle_radius );
 
 	// Formation Footprint (but with the centre of the formation located in 0/0)
 	std::vector<Eigen::Vector2f> corner_points_geometry_cs = formation_footprint->getCornerPointsGeometryCS();
@@ -113,7 +117,7 @@ int main(int argc, char **argv)
 
 	while(ros::ok())
     {
-		formation_footprint_pub.publish(formation_footprint->getFormationFootprint());
+		// formation_footprint_pub.publish(formation_footprint->getFormationFootprint()); //uncommented by Rayen
 		
         ros::spinOnce();
 		ros::Duration(0.1).sleep();

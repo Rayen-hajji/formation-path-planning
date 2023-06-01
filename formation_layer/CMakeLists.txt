@@ -8,20 +8,25 @@ project(formation_layer)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  costmap_2d
-  dynamic_reconfigure
-  message_filters
-  message_generation
-  nav_msgs
-  roscpp
-  rospy
-  pluginlib
+costmap_2d
+dynamic_reconfigure
+message_filters
+message_generation
+nav_msgs
+roscpp
+rospy
+pluginlib
+fpp_msgs
+# cv_bridge
+# opencv2
 )
+
+# find_package(OpenCV REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
-
+# set(opencv2_DIR /usr/share/OpenCV/)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -92,7 +97,7 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * uncomment the "generate_dynamic_reconfigure_options" section below
 ##     and list every .cfg file to be processed
 
-# Generate dynamic reconfigure parameters in the 'cfg' folder
+## Generate dynamic reconfigure parameters in the 'cfg' folder
 generate_dynamic_reconfigure_options(
   cfg/FormationLayer.cfg
 )
@@ -107,14 +112,18 @@ generate_dynamic_reconfigure_options(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    INCLUDE_DIRS include
-    LIBRARIES formation_layer
-    CATKIN_DEPENDS 
-      costmap_2d 
-      dynamic_reconfigure 
-      roscpp
-      rospy
-      pluginlib
+  INCLUDE_DIRS include
+  LIBRARIES formation_layer
+  CATKIN_DEPENDS 
+    costmap_2d 
+    dynamic_reconfigure 
+    roscpp
+    rospy
+    pluginlib
+    # opencv2
+    cv_bridge
+    fpp_msgs
+
 #  DEPENDS system_lib
 )
 
@@ -127,13 +136,14 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  # ${OpenCV_INCLUDE_DIRS}
 )
 include_directories(${catkin_INCLUDE_DIRS} include)
+
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/formation_layer.cpp
-# )
 add_library(formation_layer src/formation_layer.cpp)
+
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -143,6 +153,7 @@ add_library(formation_layer src/formation_layer.cpp)
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/formation_layer_node.cpp)
+add_executable(merger_node src/merger_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,13 +163,16 @@ add_library(formation_layer src/formation_layer.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(formation_layer ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
+
+# target_link_libraries(formation_layer_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
 
 #############
 ## Install ##
@@ -217,6 +231,10 @@ install(TARGETS formation_layer
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_formation_layer.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 target_link_libraries(formation_layer ${catkin_LIBRARIES})
+
+target_link_libraries(merger_node ${catkin_LIBRARIES})
+
+#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
 ## Add folders to be run by python nosetests

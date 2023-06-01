@@ -27,8 +27,8 @@ FormationPathController:
 
     # Defines the max and min velocity where the target velocity will be caped at
     # Separate in forward and backwards movement
-    max_vel_x:  0.3
-    min_vel_x: -0.2
+    max_vel_x:  0.3 # 0.3 changed by rayen
+    min_vel_x: -0.2 
 
     # Defines the max and min rotational velocity of the robot
     # As the robot can move equally to the left and right this looks at the absolut value
