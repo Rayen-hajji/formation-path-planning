@@ -7,10 +7,10 @@
     <!--arg name="gazebo_gui" default="true"/--> <!--Start without Gazebo GUI, RVIZ is enough-->
     
         <!-- for warehouse -->
-    <!--Variables for the robot0-->
+    <!-- Variables for the robot0 -->
     <!-- <arg name="robot0_name" value="robot0"/>
     <arg name="robot0_x_pos" default="6.0"/>
-    <arg name="robot0_y_pos" default="-6.0"/>
+    <arg name="robot0_y_pos" default="-6.0"/> 
     <arg name="robot0_yaw_rot" default="3.14"/> -->
     <!--Variables for the robot1-->
     <!-- <arg name="robot1_name" value="robot1"/>
@@ -94,7 +94,7 @@
         <!--This parameter is necessary to define the name of the robot in this namespace-->
         <param name="robot_name" type="str" value="$(arg robot0_name)"/> 
 
-        <include file="$(find mir_launch_sim)/launch/mir_100.launch">
+        <include file="$(find mir_launch_sim)/launch/mir_200.launch">
             <arg name="model_name" value="$(arg robot0_name)"/>
             <arg name="tf_prefix" value="$(arg robot0_name)"/>
             <arg name="robot_x" value="$(arg robot0_x_pos)"/>
@@ -123,7 +123,7 @@
         <!--This parameter is necessary to define the name of the robot in this namespace-->
         <param name="robot_name" type="str" value="$(arg robot1_name)"/> 
 
-        <include file="$(find mir_launch_sim)/launch/mir_100.launch">
+        <include file="$(find mir_launch_sim)/launch/mir_200.launch">
             <arg name="model_name" value="$(arg robot1_name)"/>
             <arg name="tf_prefix" value="$(arg robot1_name)"/>
             <arg name="robot_x" value="$(arg robot1_x_pos)"/>

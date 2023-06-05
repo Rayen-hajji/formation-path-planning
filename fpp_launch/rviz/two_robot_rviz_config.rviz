@@ -1027,6 +1027,22 @@ Visualization Manager:
       Topic: /robot0/move_base_flex/global_costmap/formation_layer/bounding_box
       Unreliable: false
       Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /robot0/move_base_flex/global_costmap/formation_layer/minimum_enclosing_circle
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /robot0/move_base_flex/global_costmap/formation_layer/transported_object_corners
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -1058,7 +1074,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 49.397789001464844
+      Distance: 8.131404876708984
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -1066,17 +1082,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -35.731441497802734
-        Y: -11.087846755981445
-        Z: -9.5963014246081e-06
+        X: -31.593460083007812
+        Y: -10.172715187072754
+        Z: -9.119464266404975e-06
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.0697968006134033
+      Pitch: 1.2897963523864746
       Target Frame: <Fixed Frame>
-      Yaw: 3.5817601680755615
+      Yaw: 3.741760492324829
     Saved: ~
 Window Geometry:
   Displays:

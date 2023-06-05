@@ -6,26 +6,6 @@
 
     <!--arg name="gazebo_gui" default="true"/--> <!--Start without Gazebo GUI, RVIZ is enough-->
     
-    <!-- for test -->
-    <!--Variables for the robot0-->
-    <!-- <arg name="robot0_name" value="robot0"/>
-    <arg name="robot0_x_pos" default="-8.0"/>
-    <arg name="robot0_y_pos" default="0.0"/>
-    <arg name="robot0_yaw_rot" default="0.0"/> -->
-
-    <!--Variables for the robot1-->
-    <!-- <arg name="robot1_name" value="robot1"/>
-    <arg name="robot1_x_pos" default="-9.0"/>
-    <arg name="robot1_y_pos" default="1.0"/>
-    <arg name="robot1_yaw_rot" default="0.0"/> -->
-
-    <!--Variables for the robot2-->
-    <!-- <arg name="robot2_name" value="robot2"/>
-    <arg name="robot2_x_pos" default="-9.0"/>
-    <arg name="robot2_y_pos" default="-1.0"/>
-    <arg name="robot2_yaw_rot" default="0.0"/> -->
-
-
     <!-- for warehouse -->
     <!--Variables for the robot0-->
     <!-- <arg name="robot0_name" value="robot0"/>
@@ -39,57 +19,56 @@
     <arg name="robot1_yaw_rot" default="3.14"/> -->
     <!--Variables for the robot2-->
     <!-- <arg name="robot2_name" value="robot2"/>
-    <arg name="robot2_x_pos" default="6.0"/>
-    <arg name="robot2_y_pos" default="-4.0"/>
+    <arg name="robot2_x_pos" default="5.5"/>
+    <arg name="robot2_y_pos" default="-3.5"/>
     <arg name="robot2_yaw_rot" default="3.14"/> -->
 
     <!-- for wide_maze -->
     <!--Variables for the robot0-->
-    <arg name="robot0_name" value="robot0"/>
+    <!-- <arg name="robot0_name" value="robot0"/>
     <arg name="robot0_x_pos" default="10"/>
     <arg name="robot0_y_pos" default="-13.5"/>
-    <arg name="robot0_yaw_rot" default="3.14"/>
+    <arg name="robot0_yaw_rot" default="3.14"/> -->
     <!--Variables for the robot1-->
-    <arg name="robot1_name" value="robot1"/>
+    <!-- <arg name="robot1_name" value="robot1"/>
     <arg name="robot1_x_pos" default="11.0"/>
     <arg name="robot1_y_pos" default="-14.5"/> 
-    <arg name="robot1_yaw_rot" default="3.14"/>
+    <arg name="robot1_yaw_rot" default="3.14"/> -->
     <!--Variables for the robot2-->
-    <arg name="robot2_name" value="robot2"/>
-    <arg name="robot2_x_pos" default="11.0"/>
-    <arg name="robot2_y_pos" default="-12.5"/>
-    <arg name="robot2_yaw_rot" default="3.14"/>
+    <!-- <arg name="robot2_name" value="robot2"/>
+    <arg name="robot2_x_pos" default="10.5"/>
+    <arg name="robot2_y_pos" default="-12.0"/>
+    <arg name="robot2_yaw_rot" default="3.14"/> -->
 
     <!-- for hallway -->
     <!--Variables for the robot0-->
-    <!-- <arg name="robot0_name" value="robot0"/>
+    <arg name="robot0_name" value="robot0"/>
     <arg name="robot0_x_pos" default="-28.5"/>
     <arg name="robot0_y_pos" default="-9.3"/>
-    <arg name="robot0_yaw_rot" default="0.0"/> -->
+    <arg name="robot0_yaw_rot" default="0.0"/>
     <!--Variables for the robot1-->
-    <!-- <arg name="robot1_name" value="robot1"/>
+    <arg name="robot1_name" value="robot1"/>
     <arg name="robot1_x_pos" default="-29.5"/>
     <arg name="robot1_y_pos" default="-8.3"/> 
-    <arg name="robot1_yaw_rot" default="0.0"/> -->
+    <arg name="robot1_yaw_rot" default="0.0"/>
     <!--Variables for the robot2-->
-    <!-- <arg name="robot2_name" value="robot2"/>
-    <arg name="robot2_x_pos" default="-29.5"/>
-    <arg name="robot2_y_pos" default="-10.3"/>
-    <arg name="robot2_yaw_rot" default="0.0"/> -->
-
+    <arg name="robot2_name" value="robot2"/>
+    <arg name="robot2_x_pos" default="-29.0"/>
+    <arg name="robot2_y_pos" default="-10.8"/>
+    <arg name="robot2_yaw_rot" default="0.0"/>
 
 
 
     <!--Constant values that cant be adjusted from outside the launch file-->
     <!--For this example only the robot0 will get an -->
     <arg name="navigation_rviz_command_args" value="-d $(find fpp_launch)/rviz/three_robot_rviz_config.rviz"/>
+    
 
                                 <!-- MAPS -->
-
         <!-- old test world -->
     <!-- <include file="$(find match_gazebo)/launch/generic_world.launch">
         <arg name="world_name" value="$(find fpp_gazebo)/worlds/fpp_test_world.world"/>
-        <arg name="map_name" value="$(find fpp_gazebo)/maps/fpp_test_world.yaml"/> --> -->
+        <arg name="map_name" value="$(find fpp_gazebo)/maps/fpp_test_world.yaml"/> -->
         <!-- <arg name="world_name" value="$(find match_gazebo)/worlds/advanced_maze.world"/>
         <arg name="map_name" value="$(find match_gazebo)/maps/advanced_maze.yaml"/> -->
         <!-- <arg name="map_name" value="$(find fpp_gazebo)/maps/fpp_test_world.yaml"/> -->
@@ -100,19 +79,19 @@
     <!-- <include file="$(find match_gazebo)/launch/generic_world.launch">
         <arg name="world_name" value="$(find fpp_gazebo)/worlds/warehouse.world"/>
         <arg name="map_name" value="$(find fpp_gazebo)/maps/warehouse.yaml"/> -->
-    <!-- </include> -->
+    <!-- </include> --> -->
 
         <!-- wide_maze -->
-    <include file="$(find match_gazebo)/launch/generic_world.launch">
+    <!-- <include file="$(find match_gazebo)/launch/generic_world.launch">
         <arg name="world_name" value="$(find match_gazebo)/worlds/wide_maze.world"/>
         <arg name="map_name" value="$(find match_gazebo)/maps/wide_maze.yaml"/> 
-    </include>
+    </include> -->
 
-        <!-- hallway -->
-    <!-- <include file="$(find match_gazebo)/launch/generic_world.launch">
+    <!-- hallway -->
+    <include file="$(find match_gazebo)/launch/generic_world.launch">
         <arg name="world_name" value="$(find match_gazebo)/worlds/building.world"/>
         <arg name="map_name" value="$(find match_gazebo)/maps/building.yaml"/> 
-    </include> -->
+    </include>
 
 
     <node name="fpp_navigation_rviz" pkg="rviz" type="rviz" respawn="false" 
@@ -127,7 +106,7 @@
     <node name="meta_data_sync_node" pkg="fpp_ros" type="fpp_meta_data_sync_node.py" respawn="false" output="screen"/>
 
     <!--this node is for merging test-->>
-    <node name="merger_node" pkg="formation_layer" type="merger_node" respawn="false" output="screen"/>
+    <!-- <node name="merger_node" pkg="formation_layer" type="merger_node" respawn="false" output="screen"/> -->
 
     <!--Create namespace for robot0 and start everything that belongs in the namespace inside the group-->
     <group ns="$(arg robot0_name)">
@@ -144,9 +123,9 @@
             <arg name="move_base_selector" value="move_base_flex"/>
             <!--arg name="start_move_base_simple" value="true" /-->
             <arg name="global_planner" default="FormationPathPlanner" />
-            <arg name="global_planner_config" default="$(find fpp_launch)/config/three_triangular_robot_config/global_planner_params.yaml" />
+            <arg name="global_planner_config" default="$(find fpp_launch)/config/three_asym_triangular_robot_config/global_planner_params.yaml" />
             <arg name="local_planner" default="FormationPathController" />
-            <arg name="local_planner_config" default="$(find fpp_launch)/config/three_triangular_robot_config/local_planner_params.yaml" />
+            <arg name="local_planner_config" default="$(find fpp_launch)/config/three_asym_triangular_robot_config/local_planner_params.yaml" />
         </include>
 
 		<!--Overwrite the enabled param that defines if new obstacles should be inserted into the global costmap. -->
@@ -154,7 +133,7 @@
         <param name="move_base_flex/global_costmap/obstacles/enabled" value="true"/>
 
 		<include file="$(find fpp_launch)/launch/launch_utils/formation_costmap.launch">
-            <arg name="formation_costmap_config_path" value="$(find fpp_launch)/config/three_triangular_robot_config/formation_costmap_params.yaml"/>
+            <arg name="formation_costmap_config_path" value="$(find fpp_launch)/config/three_asym_triangular_robot_config/formation_costmap_params.yaml"/>
         </include>
     </group>
 
@@ -173,9 +152,9 @@
             <arg name="move_base_selector" value="move_base_flex"/>
             <!--arg name="start_move_base_simple" value="false" /-->
             <arg name="global_planner" default="FormationPathPlanner" />
-            <arg name="global_planner_config" default="$(find fpp_launch)/config/three_triangular_robot_config/global_planner_params.yaml" />
+            <arg name="global_planner_config" default="$(find fpp_launch)/config/three_asym_triangular_robot_config/global_planner_params.yaml" />
             <arg name="local_planner" default="FormationPathController" />
-            <arg name="local_planner_config" default="$(find fpp_launch)/config/three_triangular_robot_config/local_planner_params.yaml" />
+            <arg name="local_planner_config" default="$(find fpp_launch)/config/three_asym_triangular_robot_config/local_planner_params.yaml" />
         </include>
 
 		<!--Overwrite the enabled param that defines if new obstacles should be inserted into the global costmap. -->
@@ -200,7 +179,7 @@
             <arg name="move_base_selector" value="move_base_flex"/>
             <!--arg name="start_move_base_simple" value="false" /-->
             <arg name="global_planner" default="FormationPathPlanner" />
-            <arg name="global_planner_config" default="$(find fpp_launch)/config/three_triangular_robot_config/global_planner_params.yaml" />
+            <arg name="global_planner_config" default="$(find fpp_launch)/config/three_asym_triangular_robot_config/global_planner_params.yaml" />
             <arg name="local_planner" default="FormationPathController" />
             <arg name="local_planner_config" default="$(find fpp_launch)/config/three_triangular_robot_config/local_planner_params.yaml" />
         </include>

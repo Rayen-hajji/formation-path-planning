@@ -83,5 +83,6 @@ namespace formation_layer_namespace{
          convexHullPoints.push_back(stk.top());    //add points from stack
          stk.pop();
       }
+      return convexHullPoints;
    }
 }

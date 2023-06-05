@@ -33,7 +33,7 @@ FormationPathPlanner:
       namespace: /robot1
       # offset: [-1.0, 1.0] # for warehouse
       # offset: [-1.0, 1.0] # for wide_maze
-      offset: [1.0, -1.0] # for hallway
+      offset: [-1.0, 1.0] # for hallway
       # reconfig_offset: [-1.0, 0.7] # Defines the distance from the master after reconfiguration
       robot_outline: [[0.506,-0.32],[0.506,0.32],[-0.454,0.32],[-0.454,-0.32]]
 
@@ -45,7 +45,7 @@ FormationPathPlanner:
       namespace: /robot2
       # offset: [-0.5, -1.5] # for warehouse
       # offset: [-1.0, -1.5] # for wide_maze
-      offset: [-0.5, 1.5] # for hallway
+      offset: [-0.5, -1.5] # for hallway
       # reconfig_offset: [-1.0, -0.7] # Defines the distance from the master after reconfiguration
       robot_outline: [[0.506,-0.32],[0.506,0.32],[-0.454,0.32],[-0.454,-0.32]]
 

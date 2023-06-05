@@ -30,34 +30,50 @@
 #include <dynamic_reconfigure/client.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <nav_msgs/OccupancyGrid.h>
-
+#include <cstdint>
+#include <ros/ros.h>
+#include <nav_msgs/OccupancyGrid.h>
+#include <costmap_2d/costmap_2d_ros.h>
+#include <algorithm>
 
 nav_msgs::OccupancyGrid costmap0,costmap1,costmap2, costmap_merged;
 bool costmap0_received = false;
 bool costmap1_received = false;
 bool costmap2_received = false;
 
-void costmapCallback0(const nav_msgs::OccupancyGrid& msg){
-    costmap0.data.clear();
-    for(int i=0; i<msg.data.size(); ++i){
-        costmap0.data.push_back(msg.data[i]);
+void costmapCallback0(const nav_msgs::OccupancyGridConstPtr& msg){
+
+    costmap0.header = msg->header;
+    costmap0.info = msg->info;
+    costmap0.data.resize(msg->data.size());
+    ROS_INFO("costmap0Callback called!");
+    for(int i=0; i<msg->data.size(); ++i){
+        // costmap0.data.push_back(msg.data[i]);
+        costmap0.data[i] = msg->data[i];
     }
     costmap0_received = true;
     ROS_INFO("costmap0_received : %d", costmap0_received);
 }
-void costmapCallback1(const nav_msgs::OccupancyGrid& msg){
-    costmap1.data.clear();
-    for(int i=0; i<msg.data.size(); ++i){
-        costmap1.data.push_back(msg.data[i]);
+
+void costmapCallback1(const nav_msgs::OccupancyGridConstPtr& msg){
+    costmap1.header = msg->header;
+    costmap1.info = msg->info;
+    costmap1.data.resize(msg->data.size());
+    for(int i=0; i<msg->data.size(); ++i){
+        // costmap1.data.push_back(msg.data[i]);
+        costmap1.data[i] = msg->data[i];
     }
     costmap1_received = true;
-    ROS_INFO("costmap 1 size is %ld",msg.data.size());
     ROS_INFO("costmap1_received : %d", costmap0_received);
 }
-void costmapCallback2(const nav_msgs::OccupancyGrid& msg){
-    costmap2.data.clear();
-    for(int i=0; i<msg.data.size(); ++i){
-        costmap2.data.push_back(msg.data[i]);
+
+void costmapCallback2(const nav_msgs::OccupancyGridConstPtr& msg){
+    costmap2.header = msg->header;
+    costmap2.info = msg->info;
+    costmap2.data.resize(msg->data.size());
+    for(int i=0; i<msg->data.size(); ++i){
+        // costmap2.data.push_back(msg.data[i]);
+        costmap2.data[i] = msg->data[i];
     }
     costmap2_received = true;
     ROS_INFO("costmap2_received : %d", costmap0_received);
@@ -80,7 +96,9 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
     ros::Rate loop_rate(30);
     
-    ros::Subscriber costmapsSubscriber0 = nh.subscribe("/robot0/move_base_flex/global_costmap/costmap",10,&costmapCallback0); 
+
+    sleep(10);
+    ros::Subscriber costmapsSubscriber0 = nh.subscribe("/robot0/move_base_flex/global_costmap/costmap",10,&costmapCallback0);
     ros::Subscriber costmapsSubscriber1 = nh.subscribe("/robot1/move_base_flex/global_costmap/costmap",10,&costmapCallback1); 
     ros::Subscriber costmapsSubscriber2 = nh.subscribe("/robot2/move_base_flex/global_costmap/costmap",10,&costmapCallback2);
     ros::Publisher mergedcostmapPublisher = nh.advertise<nav_msgs::OccupancyGrid>("merged_costmap",10,true);
@@ -88,37 +106,28 @@ int main(int argc, char **argv)
     ROS_INFO("Node started!");
     while (ros::ok())
     {
-        costmap_merged.header.frame_id = "map";
-        costmap_merged.info.resolution = 0.05;
-        costmap_merged.info.width = 4000;
-        costmap_merged.info.height = 4000;
-        costmap_merged.info.origin.position.x = -100.0;
-        costmap_merged.info.origin.position.y = -100.0;
-        costmap_merged.info.origin.position.z = 0.0;
-        costmap_merged.info.origin.orientation.x = 0.0;
-        costmap_merged.info.origin.orientation.y = 0.0;
-        costmap_merged.info.origin.orientation.z = 0.0;
-        costmap_merged.info.origin.orientation.w = 1.0;
-
-        // ROS_INFO("flags: %d, %d, %d", costmap0_received, costmap1_received, costmap2_received);
-
-        if((costmap0_received)&&(costmap1_received)&&(costmap2_received)){
-            costmap_merged.data.clear();
+        if((costmap0_received)&&(costmap2_received)){
+            if(costmap0.data.size()!=costmap2.data.size()){
+                ROS_ERROR("costmap 0 and 2 have different costmap sizes");
+                return 0;
+            }
+            costmap_merged.header = costmap0.header;
+            costmap_merged.info = costmap0.info;
+            costmap_merged.data.resize(costmap0.data.size());
+            ROS_INFO("merging starts!");
             for(int i =0; i < costmap0.data.size(); ++i){
                 // costmap_merged.data.push_back(findMax(costmap0.data[i],costmap1.data[i],costmap2.data[i]));
-                costmap_merged.data.push_back(costmap1.data[i]);
-            }
-            for(int i = 0; i <costmap_merged.data.size(); ++i){
-                if(costmap_merged.data[i]!=0){
-                    // ROS_INFO("cell %d is not 0", i);
-                }
+                int max = findMax(costmap0.data[i],0,costmap2.data[i]);
+                // ROS_INFO("max is : %d", max);
+                // costmap_merged.data[i] = max;
+                costmap_merged.data[i] = costmap0.data[i];               
             }
             ROS_INFO("first cost of merged costmap is : %d", costmap_merged.data[0]);
             mergedcostmapPublisher.publish(costmap_merged);
-            ROS_INFO("copied costmap 1 size is %ld",costmap_merged.data.size());
         }
         ros::spinOnce();
         loop_rate.sleep();
     }
     return 0;
 }
+
