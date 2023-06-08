@@ -80,6 +80,7 @@ namespace formation_layer_namespace
         ros::NodeHandle nh_;
         ros::Subscriber formationFPSubs_;
         bool transport_object_;
+        bool formation_properties_;
 
         Polygon transported_object_corners_;
         vector<geometry_msgs::PointStamped> transformed_object_corners_;

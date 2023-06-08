@@ -31,13 +31,13 @@ namespace formation_layer_namespace
         
         //publishers
         footprintsPub_ = this->nh_.advertise<geometry_msgs::PolygonStamped>("all_footprints",10,true);
+        formationFPPub_ = this->nh_.advertise<geometry_msgs::PolygonStamped>("formation_footprint", 10, true); 
         mecPub_ = this->nh_.advertise<visualization_msgs::Marker>("minimum_enclosing_circle",10,true);
         boundingBoxPub_ = this->nh_.advertise<geometry_msgs::PolygonStamped>("bounding_box",10,true);   
         mecCenterPub_ = this->nh_.advertise<geometry_msgs::PointStamped>("minimum_enclosing_circle_center",10,true);
         InflationRadiusPub_ = this->nh_.advertise<std_msgs::Float64>("inflation_radius",10,true);
         transportedObjectPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>("transported_object_corners", 10, true);
         markerPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>("footprint_points_markers", 10, true);  //for testing 
-        formationFPPub_ = this->nh_.advertise<geometry_msgs::PolygonStamped>("formation_footprint", 10, true); //to delete
         // updateBoundsPub = this->nh_.advertise<geometry_msgs::PolygonStamped>("update_bounds",10,true); to delete
         // leftPointsPub = this->nh_.advertise<visualization_msgs::MarkerArray>("left_points_markers", 10, true);  //for testing to delete
         // obstaclesPub = this->nh_.advertise<visualization_msgs::MarkerArray>("obstacle_points_markers", 10, true); //for testing
@@ -109,8 +109,11 @@ namespace formation_layer_namespace
     void FormationLayer::reconfigureCB(formation_layer::FormationLayerConfig &config, uint32_t level)
     {
         enabled_ = config.formation_layer_enabled;
+        
+        this->formation_properties_ = config.formation_properties_generated;
+
         this->transported_object_corners_ = polygon();
-        this->transport_object_ = config.transport_object;
+        this->transport_object_ = config.transport_object_included;
         this->corner1_.x = config.corner_point_1_x;
         this->corner1_.y = config.corner_point_1_y;
         this->transported_object_corners_.push_back(this->corner1_);
@@ -126,7 +129,6 @@ namespace formation_layer_namespace
         this->corner5_.x = config.corner_point_5_x;
         this->corner5_.y = config.corner_point_5_y;
         this->transported_object_corners_.push_back(this->corner5_);
-        // ROS_INFO("transported_object_corners size is : %ld",this->transported_object_corners.size());
     }
 
     // void FormationLayer::laserCallback(const sensor_msgs::LaserScan &msg){
@@ -299,130 +301,131 @@ namespace formation_layer_namespace
             }
             this->markerPub_.publish(marker_array);
             
-            //calculate the formation footprint from the footprints points and the transported object corners
-            if(!this->transport_object_)
-            {
-                this->formation_footprint_ = findConvexHull(this->footprint_points_, this->footprint_points_.size());
-            }
-            else
-            {
-                this->transformed_object_corners_ = vector<geometry_msgs::PointStamped>();
-                transformToMapFrame(this->transported_object_corners_, this->transformed_object_corners_);
-                for(int i = 0; i<this->transformed_object_corners_.size(); ++i)
+            if(this->formation_properties_){
+                //calculate the formation footprint from the footprints points and the transported object corners
+                if(!this->transport_object_)
                 {
-                    geometry_msgs::Point p;
-                    p.x = this->transformed_object_corners_[i].point.x;
-                    p.y = this->transformed_object_corners_[i].point.y;
-                    this->footprint_points_.push_back(p);
+                    this->formation_footprint_ = findConvexHull(this->footprint_points_, this->footprint_points_.size());
                 }
-                this->formation_footprint_ = findConvexHull(this->footprint_points_, this->footprint_points_.size());
-
-                //publish the transported objecr corners to visualize
-                if(this->transport_object_)
+                else
                 {
-                    visualization_msgs::MarkerArray corners_marker_array;
-                    for (unsigned int i = 0; i < this->transformed_object_corners_.size(); ++i)
+                    this->transformed_object_corners_ = vector<geometry_msgs::PointStamped>();
+                    transformToMapFrame(this->transported_object_corners_, this->transformed_object_corners_);
+                    for(int i = 0; i<this->transformed_object_corners_.size(); ++i)
                     {
-                        visualization_msgs::Marker marker;
-                        marker.header.frame_id = "map";  // Set the frame ID of the markers
-                        marker.header.stamp = ros::Time::now();
-                        marker.ns = "corners_marks";
-                        marker.id = i;
-                        marker.type = visualization_msgs::Marker::SPHERE;
-                        marker.action = visualization_msgs::Marker::ADD;
-                        marker.pose.position = this->transformed_object_corners_[i].point;  // Set the position of the marker based on the point coordinates
-                        marker.pose.orientation.x = 0.0;
-                        marker.pose.orientation.y = 0.0;
-                        marker.pose.orientation.z = 0.0;
-                        marker.pose.orientation.w = 1.0;
-                        marker.scale.x = 0.07;  
-                        marker.scale.y = 0.07;
-                        marker.scale.z = 0.07;
-                        marker.color.r = 0.0; 
-                        marker.color.g = 0.0;
-                        marker.color.b = 1.0;
-                        marker.color.a = 1.0;  // Set the alpha (transparency) of the marker
-                        corners_marker_array.markers.push_back(marker);
+                        geometry_msgs::Point p;
+                        p.x = this->transformed_object_corners_[i].point.x;
+                        p.y = this->transformed_object_corners_[i].point.y;
+                        this->footprint_points_.push_back(p);
                     }
-                    this->transportedObjectPub_.publish(corners_marker_array);
+                    this->formation_footprint_ = findConvexHull(this->footprint_points_, this->footprint_points_.size());
+
+                    //publish the transported objecr corners to visualize
+                    if(this->transport_object_)
+                    {
+                        visualization_msgs::MarkerArray corners_marker_array;
+                        for (unsigned int i = 0; i < this->transformed_object_corners_.size(); ++i)
+                        {
+                            visualization_msgs::Marker marker;
+                            marker.header.frame_id = "map";  // Set the frame ID of the markers
+                            marker.header.stamp = ros::Time::now();
+                            marker.ns = "corners_marks";
+                            marker.id = i;
+                            marker.type = visualization_msgs::Marker::SPHERE;
+                            marker.action = visualization_msgs::Marker::ADD;
+                            marker.pose.position = this->transformed_object_corners_[i].point;  // Set the position of the marker based on the point coordinates
+                            marker.pose.orientation.x = 0.0;
+                            marker.pose.orientation.y = 0.0;
+                            marker.pose.orientation.z = 0.0;
+                            marker.pose.orientation.w = 1.0;
+                            marker.scale.x = 0.07;  
+                            marker.scale.y = 0.07;
+                            marker.scale.z = 0.07;
+                            marker.color.r = 0.0; 
+                            marker.color.g = 0.0;
+                            marker.color.b = 1.0;
+                            marker.color.a = 1.0;  // Set the alpha (transparency) of the marker
+                            corners_marker_array.markers.push_back(marker);
+                        }
+                        this->transportedObjectPub_.publish(corners_marker_array);
+                    }
                 }
+
+                //get the BoundingBox of the formation footprint
+                this->bounding_box_ = vector<geometry_msgs::Point>();
+                this->bounding_box_ = calculateBoundingBox(formation_footprint_);
+                // *min_x = std::min(bounding_box[2].x, *min_x); 
+                // *min_y = std::min(bounding_box[2].y, *min_y);
+                // *max_x = std::min(bounding_box[0].x, *max_x);
+                // *max_y = std::min(bounding_box[0].y, *max_y);
+
+                //get the minimum enclosing circle
+                //convert the formation footprint to points
+                for(const auto& point : this->formation_footprint_)
+                {
+                    Point p;
+                    p.X = point.x;
+                    p.Y = point.y;
+                    this->formation_fp_points_.push_back(p);
+                }
+                this->mec_ = welzl(formation_fp_points_);
+                geometry_msgs::PointStamped mecC_msg;
+                mecC_msg.header.frame_id = "map";
+                mecC_msg.point.x = mec_.C.X;
+                mecC_msg.point.y = mec_.C.Y;
+                mecC_msg.point.z = 0.0;
+                this->mecCenterPub_.publish(mecC_msg);
+                reconfigureInflationRadius(mec_.R * 3.0);
+
+                //publish formation footprint to visualize
+                geometry_msgs::PolygonStamped formation_footprint_msg;
+                formation_footprint_msg.header.frame_id = "map";
+                formation_footprint_msg.header.stamp = ros::Time::now();
+                for(const auto& point : this->formation_footprint_)
+                {
+                    geometry_msgs::Point32 p;
+                    p.x = point.x;
+                    p.y = point.y;
+                    p.z = 0;
+                    formation_footprint_msg.polygon.points.push_back(p);
+                }
+                formationFPPub_.publish(formation_footprint_msg);
+
+                //publish the bouding box to visualize
+                geometry_msgs::PolygonStamped boundingBoxMsg;
+                boundingBoxMsg.header.frame_id = "map";
+                boundingBoxMsg.header.stamp = ros::Time::now();
+                for(const auto& point : this->bounding_box_)
+                {
+                    geometry_msgs::Point32 p;
+                    p.x = point.x;
+                    p.y = point.y;
+                    p.z = 0;
+                    boundingBoxMsg.polygon.points.push_back(p);
+                }
+                boundingBoxPub_.publish(boundingBoxMsg);
+
+                //publish the formaiton minimum ecnlosing circle to visualize
+                visualization_msgs::Marker marker;
+                marker.header.frame_id = "map";
+                marker.type = visualization_msgs::Marker::SPHERE;
+                marker.action = visualization_msgs::Marker::ADD;
+                marker.pose.position.x = mec_.C.X;
+                marker.pose.position.y = mec_.C.Y;
+                marker.pose.position.z = 0.0;
+                marker.pose.orientation.x = 0.0;
+                marker.pose.orientation.y = 0.0;
+                marker.pose.orientation.z = 0.0;
+                marker.pose.orientation.w = 1.0;
+                marker.scale.x = 2.0 * mec_.R;
+                marker.scale.y = 2.0 * mec_.R;
+                marker.scale.z = 0.1;
+                marker.color.a = 0.59;
+                marker.color.r = 1.0;
+                marker.color.g = 0.6;
+                marker.color.b = 0.6;
+                this->mecPub_.publish(marker);
             }
-
-            //get the BoundingBox of the formation footprint
-            this->bounding_box_ = vector<geometry_msgs::Point>();
-            this->bounding_box_ = calculateBoundingBox(formation_footprint_);
-            // *min_x = std::min(bounding_box[2].x, *min_x); 
-            // *min_y = std::min(bounding_box[2].y, *min_y);
-            // *max_x = std::min(bounding_box[0].x, *max_x);
-            // *max_y = std::min(bounding_box[0].y, *max_y);
-
-            //get the minimum enclosing circle
-            //convert the formation footprint to points
-            for(const auto& point : this->formation_footprint_)
-            {
-                Point p;
-                p.X = point.x;
-                p.Y = point.y;
-                this->formation_fp_points_.push_back(p);
-            }
-            this->mec_ = welzl(formation_fp_points_);
-            geometry_msgs::PointStamped mecC_msg;
-            mecC_msg.header.frame_id = "map";
-            mecC_msg.point.x = mec_.C.X;
-            mecC_msg.point.y = mec_.C.Y;
-            mecC_msg.point.z = 0.0;
-            this->mecCenterPub_.publish(mecC_msg);
-            reconfigureInflationRadius(mec_.R * 1.5);
-
-            //publish formation footprint to visualize
-            geometry_msgs::PolygonStamped formation_footprint_msg;
-            formation_footprint_msg.header.frame_id = "map";
-            formation_footprint_msg.header.stamp = ros::Time::now();
-            for(const auto& point : this->formation_footprint_)
-            {
-                geometry_msgs::Point32 p;
-                p.x = point.x;
-                p.y = point.y;
-                p.z = 0;
-                formation_footprint_msg.polygon.points.push_back(p);
-            }
-            formationFPPub_.publish(formation_footprint_msg);
-
-            //publish the bouding box to visualize
-            geometry_msgs::PolygonStamped boundingBoxMsg;
-            boundingBoxMsg.header.frame_id = "map";
-            boundingBoxMsg.header.stamp = ros::Time::now();
-            for(const auto& point : this->bounding_box_)
-            {
-                geometry_msgs::Point32 p;
-                p.x = point.x;
-                p.y = point.y;
-                p.z = 0;
-                boundingBoxMsg.polygon.points.push_back(p);
-            }
-            boundingBoxPub_.publish(boundingBoxMsg);
-
-            //publish the formaiton minimum ecnlosing circle to visualize
-            visualization_msgs::Marker marker;
-            marker.header.frame_id = "map";
-            marker.type = visualization_msgs::Marker::SPHERE;
-            marker.action = visualization_msgs::Marker::ADD;
-            marker.pose.position.x = mec_.C.X;
-            marker.pose.position.y = mec_.C.Y;
-            marker.pose.position.z = 0.0;
-            marker.pose.orientation.x = 0.0;
-            marker.pose.orientation.y = 0.0;
-            marker.pose.orientation.z = 0.0;
-            marker.pose.orientation.w = 1.0;
-            marker.scale.x = 2.0 * mec_.R;
-            marker.scale.y = 2.0 * mec_.R;
-            marker.scale.z = 0.1;
-            marker.color.a = 0.5;
-            marker.color.r = 1.0;
-            marker.color.g = 0.0;
-            marker.color.b = 0.0;
-            this->mecPub_.publish(marker);
-
         }
     }
 
