@@ -13,6 +13,8 @@ namespace formation_layer_namespace
     void FormationLayer::onInitialize()
     {
 
+        this->update_cycles_ = 1;
+
         ROS_INFO("Global costmap using formation_layer plugin");
         this->nh_ = ros::NodeHandle("~/"+ name_);
 
@@ -29,7 +31,7 @@ namespace formation_layer_namespace
         //subscribe to the formation footprint topic
         // laserSub = this->nh_.subscribe("/robot2/scan",10,&FormationLayer::laserCallback, this); //for testing
         
-        //publishers
+        //publishers    
         footprintsPub_ = this->nh_.advertise<geometry_msgs::PolygonStamped>("all_footprints",10,true);
         formationFPPub_ = this->nh_.advertise<geometry_msgs::PolygonStamped>("formation_footprint", 10, true); 
         mecPub_ = this->nh_.advertise<visualization_msgs::Marker>("minimum_enclosing_circle",10,true);
@@ -77,11 +79,6 @@ namespace formation_layer_namespace
                 //create and save subscribers 
                 posesSubscribers_.push_back(this->nh_.subscribe<geometry_msgs::PoseWithCovarianceStamped>(topic_name, 10, posesCallbacks_[i]));
 
-                //only for testing
-                // ROS_INFO("Topic %d is %s", i, Subscribers[i].getTopic().c_str());
-                // if(i == robots_number-1){}
-                    // ROS_INFO("all Subscribers are created");
-                // else ROS_INFO("Was in Loop");
             }
         }
 		else
@@ -111,6 +108,8 @@ namespace formation_layer_namespace
         enabled_ = config.formation_layer_enabled;
         
         this->formation_properties_ = config.formation_properties_generated;
+
+        this->clear_method_ = config.clear;
 
         this->transported_object_corners_ = polygon();
         this->transport_object_ = config.transport_object_included;
@@ -258,8 +257,8 @@ namespace formation_layer_namespace
     {
         if(!enabled_)
             return;
-        // if(robot_positions.size() == robots_number){
-        if(!robot_positions_.empty()){ 
+        if(robot_positions_.size() == robots_number_){
+        this->start_ = ros::WallTime::now();                            //process time test
             this->footprint_points_ = vector<geometry_msgs::Point>();
             this->formation_fp_points_ = vector<Point>();
 
@@ -276,19 +275,19 @@ namespace formation_layer_namespace
                 }
             }
 
-            //for testing: publish the footprint points as Markers
+            //for testing: publish the footprint points as Markers 
             visualization_msgs::MarkerArray marker_array;
             for (unsigned int i = 0; i < this->footprint_points_.size(); ++i) 
             {
                 // Create a marker for each point
                 visualization_msgs::Marker marker;
-                marker.header.frame_id = "map";  // Set the frame ID of the markers
+                marker.header.frame_id = "map";  
                 marker.header.stamp = ros::Time::now();
                 marker.ns = "point_markers";
                 marker.id = i;
                 marker.type = visualization_msgs::Marker::SPHERE;
                 marker.action = visualization_msgs::Marker::ADD;
-                marker.pose.position = this->footprint_points_[i];  // Set the position of the marker based on the point coordinates
+                marker.pose.position = this->footprint_points_[i];  
                 marker.scale.x = 0.07;  
                 marker.scale.y = 0.07;
                 marker.scale.z = 0.07;
@@ -296,7 +295,6 @@ namespace formation_layer_namespace
                 marker.color.g = 0.0;
                 marker.color.b = 0.0;
                 marker.color.a = 1.0; 
-                // Add the marker to the marker array
                 marker_array.markers.push_back(marker);
             }
             this->markerPub_.publish(marker_array);
@@ -320,20 +318,20 @@ namespace formation_layer_namespace
                     }
                     this->formation_footprint_ = findConvexHull(this->footprint_points_, this->footprint_points_.size());
 
-                    //publish the transported objecr corners to visualize
+                    //publish the transported objecr corners to visualize 
                     if(this->transport_object_)
                     {
                         visualization_msgs::MarkerArray corners_marker_array;
                         for (unsigned int i = 0; i < this->transformed_object_corners_.size(); ++i)
                         {
                             visualization_msgs::Marker marker;
-                            marker.header.frame_id = "map";  // Set the frame ID of the markers
+                            marker.header.frame_id = "map";  
                             marker.header.stamp = ros::Time::now();
                             marker.ns = "corners_marks";
                             marker.id = i;
                             marker.type = visualization_msgs::Marker::SPHERE;
                             marker.action = visualization_msgs::Marker::ADD;
-                            marker.pose.position = this->transformed_object_corners_[i].point;  // Set the position of the marker based on the point coordinates
+                            marker.pose.position = this->transformed_object_corners_[i].point;  
                             marker.pose.orientation.x = 0.0;
                             marker.pose.orientation.y = 0.0;
                             marker.pose.orientation.z = 0.0;
@@ -344,20 +342,21 @@ namespace formation_layer_namespace
                             marker.color.r = 0.0; 
                             marker.color.g = 0.0;
                             marker.color.b = 1.0;
-                            marker.color.a = 1.0;  // Set the alpha (transparency) of the marker
+                            marker.color.a = 1.0;
                             corners_marker_array.markers.push_back(marker);
                         }
                         this->transportedObjectPub_.publish(corners_marker_array);
                     }
+
                 }
 
                 //get the BoundingBox of the formation footprint
                 this->bounding_box_ = vector<geometry_msgs::Point>();
                 this->bounding_box_ = calculateBoundingBox(formation_footprint_);
-                // *min_x = std::min(bounding_box[2].x, *min_x); 
-                // *min_y = std::min(bounding_box[2].y, *min_y);
-                // *max_x = std::min(bounding_box[0].x, *max_x);
-                // *max_y = std::min(bounding_box[0].y, *max_y);
+                *min_x = std::min(bounding_box_[2].x, *min_x); 
+                *min_y = std::min(bounding_box_[2].y, *min_y);
+                *max_x = std::max(bounding_box_[0].x, *max_x);
+                *max_y = std::max(bounding_box_[0].y, *max_y);
 
                 //get the minimum enclosing circle
                 //convert the formation footprint to points
@@ -405,7 +404,7 @@ namespace formation_layer_namespace
                 }
                 boundingBoxPub_.publish(boundingBoxMsg);
 
-                //publish the formaiton minimum ecnlosing circle to visualize
+                // publish the formaiton minimum ecnlosing circle to visualize
                 visualization_msgs::Marker marker;
                 marker.header.frame_id = "map";
                 marker.type = visualization_msgs::Marker::SPHERE;
@@ -425,6 +424,7 @@ namespace formation_layer_namespace
                 marker.color.g = 0.6;
                 marker.color.b = 0.6;
                 this->mecPub_.publish(marker);
+
             }
         }
     }
@@ -602,19 +602,30 @@ namespace formation_layer_namespace
 
         if(this->footprints_.size() == robots_number_)
         {
-            for(int i = 0 ; i < robots_number_; i++)
-            {
-                string robot_id = "robot_" + to_string(i);
-                setPolygonCost(master_grid, this->footprints_[robot_id], FREE_SPACE, min_i, min_j, max_i, max_j, true);
-                // save all footprints here
-                // this->previous_footprints.push_back(footprints[robot_id]);
-                // for(int i=0 ; i < previous_footprints.size(); i++){
-                //     setPolygonCost(master_grid, this->previous_footprints[i], FREE_SPACE, min_i, min_j, max_i, max_j, true);
-                // }
-                // if(this->previous_footprints.size()>300)
-                //     this->previous_footprints.erase(this->previous_footprints.begin(),this->previous_footprints.end());
+            if(this->clear_method_ == 0){
+                for(int i = 0 ; i < robots_number_; i++)
+                {
+                    string robot_id = "robot_" + to_string(i);
+                    setPolygonCost(master_grid, this->footprints_[robot_id], FREE_SPACE, min_i, min_j, max_i, max_j, true);
+                    // master_grid.setConvexPolygonCost(this->footprints_[robot_id], FREE_SPACE);
+                    // save all footprints here
+                    // this->previous_footprints.push_back(footprints[robot_id]);
+                    // for(int i=0 ; i < previous_footprints.size(); i++){
+                    //     setPolygonCost(master_grid, this->previous_footprints[i], FREE_SPACE, min_i, min_j, max_i, max_j, true);
+                    // }
+                    // if(this->previous_footprints.size()>300)
+                    //     this->previous_footprints.erase(this->previous_footprints.begin(),this->previous_footprints.end());
+                }
             }
-
+            else    
+                setPolygonCost(master_grid, this->formation_footprint_, FREE_SPACE, min_i, min_j, max_i, max_j, true);
+            this->end_ = ros::WallTime::now();
+            if((this->update_cycles_ % 100 == 0)||(this->update_cycles_ == 1)){
+                double duration = (this->end_ - this->start_).toNSec() * 1e-6;
+                ROS_INFO("proces time of the formation layer is %f, cycle =%d",duration,this->update_cycles_);
+            }
+            this->update_cycles_++; 
+            
         //     this->cells = vector<PointInt> ();
         //     master_grids.push_back(master_grid);
         //     ROS_INFO("master_grids size is %ld",master_grids.size());  

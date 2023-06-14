@@ -10,6 +10,7 @@
 #include <costmap_2d/layer.h>
 #include <costmap_2d/layered_costmap.h>
 #include <costmap_2d/footprint.h>
+#include <costmap_2d/costmap_layer.h>
 
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -77,10 +78,15 @@ namespace formation_layer_namespace
 
     private :
 
+        //to calculate the layer processing time
+        ros::WallTime start_, end_;
+        int update_cycles_;
+
         ros::NodeHandle nh_;
         ros::Subscriber formationFPSubs_;
         bool transport_object_;
         bool formation_properties_;
+        int clear_method_;
 
         Polygon transported_object_corners_;
         vector<geometry_msgs::PointStamped> transformed_object_corners_;
