@@ -86,32 +86,23 @@
 
                                 <!-- MAPS -->
 
-        <!-- old test world -->
-    <!-- <include file="$(find match_gazebo)/launch/generic_world.launch">
-        <arg name="world_name" value="$(find fpp_gazebo)/worlds/fpp_test_world.world"/>
-        <arg name="map_name" value="$(find fpp_gazebo)/maps/fpp_test_world.yaml"/> --> -->
-        <!-- <arg name="world_name" value="$(find match_gazebo)/worlds/advanced_maze.world"/>
-        <arg name="map_name" value="$(find match_gazebo)/maps/advanced_maze.yaml"/> -->
-        <!-- <arg name="map_name" value="$(find fpp_gazebo)/maps/fpp_test_world.yaml"/> -->
-        <!-- <arg name="world_name" value="$(find match_gazebo)/worlds/advanced_maze.world"/> -->
-    <!-- </include> -->
 
-        <!-- warehouse -->
-    <!-- <include file="$(find match_gazebo)/launch/generic_world.launch">
-        <arg name="world_name" value="$(find fpp_gazebo)/worlds/warehouse.world"/>
-        <arg name="map_name" value="$(find fpp_gazebo)/maps/warehouse.yaml"/> -->
-    <!-- </include> -->
+            <!-- warehouse -->
+    <!-- <include file="$(find fpp_launch)/launch/launch_utils/generic_world.launch">
+        <arg name="world_name" value="$(find fpp_launch)/worlds/warehouse.world"/>
+        <arg name="map_name" value="$(find fpp_launch)/maps/warehouse.yaml"/> -->
+    <!-- </include>  -->
 
-        <!-- wide_maze -->
-    <include file="$(find match_gazebo)/launch/generic_world.launch">
-        <arg name="world_name" value="$(find match_gazebo)/worlds/wide_maze.world"/>
-        <arg name="map_name" value="$(find match_gazebo)/maps/wide_maze.yaml"/> 
+            <!-- wide_maze -->
+    <include file="$(find fpp_launch)/launch/launch_utils/generic_world.launch">
+        <arg name="world_name" value="$(find fpp_launch)/worlds/wide_maze.world"/>
+        <arg name="map_name" value="$(find fpp_launch)/maps/wide_maze.yaml"/> 
     </include>
 
-        <!-- hallway -->
-    <!-- <include file="$(find match_gazebo)/launch/generic_world.launch">
-        <arg name="world_name" value="$(find match_gazebo)/worlds/building.world"/>
-        <arg name="map_name" value="$(find match_gazebo)/maps/building.yaml"/> 
+            <!-- hallway -->
+    <!-- <include file="$(find fpp_launch)/launch/launch_utils/generic_world.launch">
+        <arg name="world_name" value="$(find fpp_launch)/worlds/building.world"/>
+        <arg name="map_name" value="$(find fpp_launch)/maps/building.yaml"/> 
     </include> -->
 
 
@@ -127,14 +118,14 @@
     <node name="meta_data_sync_node" pkg="fpp_ros" type="fpp_meta_data_sync_node.py" respawn="false" output="screen"/>
 
     <!--this node is for merging test-->>
-    <node name="merger_node" pkg="formation_layer" type="merger_node" respawn="false" output="screen"/>
+    <!-- <node name="merger_node" pkg="formation_layer" type="merger_node" respawn="false" output="screen"/> -->
 
     <!--Create namespace for robot0 and start everything that belongs in the namespace inside the group-->
     <group ns="$(arg robot0_name)">
         <!--This parameter is necessary to define the name of the robot in this namespace-->
         <param name="robot_name" type="str" value="$(arg robot0_name)"/> 
 
-        <include file="$(find mir_launch_sim)/launch/mir_100.launch">
+        <include file="$(find mir_launch_sim)/launch/mir_200.launch">
             <arg name="model_name" value="$(arg robot0_name)"/>
             <arg name="tf_prefix" value="$(arg robot0_name)"/>
             <arg name="robot_x" value="$(arg robot0_x_pos)"/>
@@ -163,7 +154,7 @@
         <!--This parameter is necessary to define the name of the robot in this namespace-->
         <param name="robot_name" type="str" value="$(arg robot1_name)"/> 
 
-        <include file="$(find mir_launch_sim)/launch/mir_100.launch">
+        <include file="$(find mir_launch_sim)/launch/mir_200.launch">
             <arg name="model_name" value="$(arg robot1_name)"/>
             <arg name="tf_prefix" value="$(arg robot1_name)"/>
             <arg name="robot_x" value="$(arg robot1_x_pos)"/>
@@ -190,7 +181,7 @@
         <!--This parameter is necessary to define the name of the robot in this namespace-->
         <param name="robot_name" type="str" value="$(arg robot2_name)"/> 
 
-        <include file="$(find mir_launch_sim)/launch/mir_100.launch">
+        <include file="$(find mir_launch_sim)/launch/mir_200.launch">
             <arg name="model_name" value="$(arg robot2_name)"/>
             <arg name="tf_prefix" value="$(arg robot2_name)"/>
             <arg name="robot_x" value="$(arg robot2_x_pos)"/>

@@ -54,13 +54,6 @@ namespace formation_layer_namespace
         int y;
     };
 
-    // struct sensor_msg {
-    //     double angle_min;
-    //     double angle_max;
-    //     double angle_increment;
-    //     vector<double> ranges;
-    // };
-
     class FormationLayer : public costmap_2d::Layer
     {
     public :
@@ -78,15 +71,10 @@ namespace formation_layer_namespace
 
     private :
 
-        //to calculate the layer processing time
-        ros::WallTime start_, end_;
-        int update_cycles_;
-
         ros::NodeHandle nh_;
-        ros::Subscriber formationFPSubs_;
+
         bool transport_object_;
         bool formation_properties_;
-        int clear_method_;
 
         Polygon transported_object_corners_;
         vector<geometry_msgs::PointStamped> transformed_object_corners_;
@@ -95,7 +83,9 @@ namespace formation_layer_namespace
         geometry_msgs::Point corner3_;
         geometry_msgs::Point corner4_;
         geometry_msgs::Point corner5_;
-
+        
+        ros::Subscriber formationFPSubs_;
+        
         ros::Publisher formationFPPub_;
         ros::Publisher footprintsPub_;
         ros::Publisher mecPub_;
@@ -113,9 +103,8 @@ namespace formation_layer_namespace
 
         int robots_number_;
 
-        bool service_flag_ = true;
+        bool service_flag_ = true; //this flag is used to let only Robot 0 advertise the mec service
 
-        // vector to save all units positions
         vector<geometry_msgs::PoseWithCovarianceStamped> robot_poses_;
 
         map<std::string, geometry_msgs::PoseWithCovarianceStamped> robot_positions_;
@@ -126,44 +115,16 @@ namespace formation_layer_namespace
 
         map<std::string, Polygon> footprints_;
 
-        // polygon to save all footprints points
+
         Polygon footprint_points_;
 
         Polygon formation_footprint_;
-
-        vector<Polygon> previous_footprints_;
-
-        Polygon update_bounds_;
 
         Polygon bounding_box_;
 
         vector<Point> formation_fp_points_;
 
-        //the circumscribed circle of the formation 
         Circle mec_;
-
-        //only for testing
-        vector<PointInt> cells_;
-
-
-        // Testing variables
-        // costmap_2d::Costmap2D& old_master_grid;
-        // vector<costmap_2d::Costmap2D> master_grids;
-        // ros::Publisher leftPointsPub;
-        // ros::Subscriber laserSub;
-        // ros::Publisher pointMarkerPub;
-        // Polygon leftPoints;
-        // double origin_x, origin_y, resolution;
-        // bool flag;
-        // sensor_msg laser_data;
-        // Polygon obstacles;
-        // Polygon obstacle_map;
-        // string laser_frame;
-        // ros::Publisher mec2Pub;
-        // ros::Publisher mcCenter2Pub;
-        // void laserCallback(const sensor_msgs::LaserScan &msg);
-
-
 
         void reconfigureCB(formation_layer::FormationLayerConfig &config, uint32_t level);
 

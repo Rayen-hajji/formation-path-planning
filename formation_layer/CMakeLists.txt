@@ -153,7 +153,6 @@ add_library(formation_layer src/formation_layer.cpp)
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/formation_layer_node.cpp)
-add_executable(merger_node src/merger_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -231,8 +230,6 @@ install(TARGETS formation_layer
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_formation_layer.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 target_link_libraries(formation_layer ${catkin_LIBRARIES})
-
-target_link_libraries(merger_node ${catkin_LIBRARIES})
 
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
