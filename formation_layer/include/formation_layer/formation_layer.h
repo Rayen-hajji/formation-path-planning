@@ -72,17 +72,6 @@ namespace formation_layer_namespace
     private :
 
         ros::NodeHandle nh_;
-
-        bool transport_object_;
-        bool formation_properties_;
-
-        Polygon transported_object_corners_;
-        vector<geometry_msgs::PointStamped> transformed_object_corners_;
-        geometry_msgs::Point corner1_;
-        geometry_msgs::Point corner2_;
-        geometry_msgs::Point corner3_;
-        geometry_msgs::Point corner4_;
-        geometry_msgs::Point corner5_;
         
         ros::Subscriber formationFPSubs_;
         
@@ -97,13 +86,25 @@ namespace formation_layer_namespace
 
         ros::ServiceServer mecService_;
 
+        int robots_number_;
+
         dynamic_reconfigure::Server<formation_layer::FormationLayerConfig> *dsrv_;
 
         vector<std::function<void(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr&)>> posesCallbacks_;
 
-        int robots_number_;
+        bool transport_object_;
+        bool formation_properties_;
 
-        bool service_flag_ = true; //this flag is used to let only Robot 0 advertise the mec service
+        Polygon transported_object_corners_;
+        vector<geometry_msgs::PointStamped> transformed_object_corners_;
+        geometry_msgs::Point corner1_;
+        geometry_msgs::Point corner2_;
+        geometry_msgs::Point corner3_;
+        geometry_msgs::Point corner4_;
+        geometry_msgs::Point corner5_;
+
+
+        bool service_flag_ = true; //this flag is used to advertise the mec service only once
 
         vector<geometry_msgs::PoseWithCovarianceStamped> robot_poses_;
 

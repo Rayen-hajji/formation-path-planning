@@ -252,6 +252,7 @@ namespace formation_layer_namespace
                 formation_footprint_msg.header.frame_id = "map";
                 formation_footprint_msg.header.stamp = ros::Time::now();
                 
+                //publish formation footprint to visualize
                 for(const auto& point : this->formation_footprint_)
                 {
                     geometry_msgs::Point32 p;
@@ -260,11 +261,10 @@ namespace formation_layer_namespace
                     p.z = 0;
                     formation_footprint_msg.polygon.points.push_back(p);
                 }
-
                 formationFPPub_.publish(formation_footprint_msg);
             }
 
-            else                      //formation footprint without the transported object corners
+            else                      //formation footprint with the transported object corners
             {
                 this->transformed_object_corners_ = vector<geometry_msgs::PointStamped>();
                 transformToMapFrame(this->transported_object_corners_, this->transformed_object_corners_);
@@ -348,7 +348,7 @@ namespace formation_layer_namespace
             
             if(this->formation_properties_){
                 
-                //get the minimum enclosing circle          
+                //get the minimum enclosing circle of the formation          
                 for(const auto& point : this->formation_footprint_)
                 {
                     Point p;
@@ -356,7 +356,6 @@ namespace formation_layer_namespace
                     p.Y = point.y;
                     this->formation_fp_points_.push_back(p);
                 }
-
                 this->mec_ = welzl(formation_fp_points_);
                 
                 //publish the formation minimum enclosing circle center to visualize
@@ -367,7 +366,7 @@ namespace formation_layer_namespace
                 mecC_msg.point.z = 0.0;
                 this->mecCenterPub_.publish(mecC_msg);
 
-                reconfigureInflationRadius(mec_.R * 3.0); // The 3.0 is a safety factor                                           
+                reconfigureInflationRadius(mec_.R * 3.0); // reconfigure the inflation radius with safety factor 3.0                                           
 
                 // publish the formaiton minimum ecnlosing circle to visualize
                 visualization_msgs::Marker marker;
